@@ -119,17 +119,15 @@ func getCars(ctx *gin.Context) {
 }
 
 func createCar(ctx *gin.Context) {
+	var newCar models.Car
 	var newSpecs models.Specs
 	var newAccidents []models.Accident
 	var newRestrictions []models.Restriction
 	var newMileages []models.Mileage
-	var newCar models.Car
+	var newGeneral models.General
 
 	if err := ctx.BindJSON(&newCar); err != nil {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: err.Error(),
-		})
+		sendError(err.Error(), ctx)
 		return
 	}
 
@@ -137,11 +135,12 @@ func createCar(ctx *gin.Context) {
 	newAccidents = newCar.Accidents
 	newRestrictions = newCar.Restrictions
 	newMileages = newCar.Mileage
+	newGeneral = newCar.General
 
 	tx := DB.Begin()
-	result := DB.First(&newSpecs)
+	result := tx.First(&newSpecs)
 	if result.RowsAffected == 0 {
-		result := DB.Create(&newSpecs)
+		result := tx.Create(&newSpecs)
 		if result.Error != nil {
 			tx.Rollback()
 			sendError(result.Error.Error(), ctx)
@@ -152,7 +151,7 @@ func createCar(ctx *gin.Context) {
 	for _, newAccident := range newAccidents {
 
 		var existingAccident models.Accident
-		checkResult := DB.Where(&models.Accident{
+		checkResult := tx.Where(&models.Accident{
 			LicensePlate: newAccident.LicensePlate,
 			AccidentDate: newAccident.AccidentDate,
 		}).Find(&existingAccident)
@@ -160,7 +159,7 @@ func createCar(ctx *gin.Context) {
 			continue
 		}
 
-		result := DB.Create(&newAccident)
+		result := tx.Create(&newAccident)
 		if result.Error != nil {
 			tx.Rollback()
 			sendError(result.Error.Error(), ctx)
@@ -186,7 +185,7 @@ existingsLoop:
 			}
 		}
 		fmt.Println(existingRestriction)
-		DB.Model(&models.Restriction{}).
+		tx.Model(&models.Restriction{}).
 			Where(
 				"license_plate = ? AND restriction = ?",
 				existingRestriction.LicensePlate,
@@ -202,7 +201,7 @@ newsLoop:
 			}
 		}
 
-		result := DB.Create(&newRestriction)
+		result := tx.Create(&newRestriction)
 		if result.Error != nil {
 			tx.Rollback()
 			sendError(result.Error.Error(), ctx)
@@ -213,7 +212,7 @@ newsLoop:
 	for _, newMileage := range newMileages {
 
 		var tempMileage models.Mileage
-		checkResult := DB.Where(&models.Mileage{
+		checkResult := tx.Where(&models.Mileage{
 			LicensePlate: newMileage.LicensePlate,
 			Mileage:      newMileage.Mileage,
 		}).Find(&tempMileage)
@@ -221,7 +220,17 @@ newsLoop:
 			continue
 		}
 
-		result := DB.Create(&newMileage)
+		result := tx.Create(&newMileage)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+	}
+
+	result = tx.Find(&newGeneral, "license_plate = ?", newSpecs.LicensePlate)
+	if result.RowsAffected == 0 {
+		result := tx.Create(&newGeneral)
 		if result.Error != nil {
 			tx.Rollback()
 			sendError(result.Error.Error(), ctx)
