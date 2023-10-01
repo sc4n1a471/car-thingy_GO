@@ -2,6 +2,7 @@ package main
 
 import (
 	"Go_Thingy/models"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -146,14 +147,17 @@ func createQuery(ctx *gin.Context) {
 	newMileages = newQuery.Mileage
 
 	tx := DB.Begin()
-	result := DB.Create(&newSpecs)
-	if result.Error != nil {
-		tx.Rollback()
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: result.Error.Error(),
-		})
-		return
+	result := DB.First(&newSpecs)
+	if result.RowsAffected == 0 {
+		result := DB.Create(&newSpecs)
+		if result.Error != nil {
+			tx.Rollback()
+			ctx.IndentedJSON(http.StatusConflict, models.Response{
+				Status:  "fail",
+				Message: result.Error.Error(),
+			})
+			return
+		}
 	}
 
 	for _, newAccident := range newAccidents {
@@ -187,18 +191,31 @@ func createQuery(ctx *gin.Context) {
 		})
 		return
 	}
+
+existingsLoop:
 	for _, existingRestriction := range existingRestrictions {
 		for _, newRestriction := range newRestrictions {
 			if existingRestriction.Restriction == newRestriction.Restriction {
-				continue
+				fmt.Println(existingRestriction.Restriction)
+				fmt.Println(newRestriction.Restriction)
+				fmt.Println(existingRestriction.Restriction == newRestriction.Restriction)
+				continue existingsLoop
 			}
 		}
-		// set existing to inactive
+		fmt.Println(existingRestriction)
+		DB.Model(&models.Restriction{}).
+			Where(
+				"license_plate = ? AND restriction = ?",
+				existingRestriction.LicensePlate,
+				existingRestriction.Restriction).
+			Update("active", false)
 	}
+
+newsLoop:
 	for _, newRestriction := range newRestrictions {
 		for _, existingRestriction := range existingRestrictions {
 			if existingRestriction.Restriction == newRestriction.Restriction {
-				continue
+				continue newsLoop
 			}
 		}
 
@@ -238,7 +255,7 @@ func createQuery(ctx *gin.Context) {
 	tx.Commit()
 	ctx.IndentedJSON(http.StatusCreated, models.Response{
 		Status:  "success",
-		Message: "Specs was uploaded successfully",
+		Message: "Query was uploaded successfully",
 	})
 	return
 }
