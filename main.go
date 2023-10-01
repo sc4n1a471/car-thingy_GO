@@ -15,53 +15,13 @@ import (
 var DB *gorm.DB
 var Error error
 
-//var cars = []models.Specs{
-//	{
-//		LicensePlate: "TEST111",
-//		Brand:        "BMW",
-//		Color:        "FEKETE",
-//		EngineSize:   4400,
-//		FirstReg:     "1994.01.01",
-//		FirstRegHun:  "1994.01.01",
-//		FuelType:     "Benzin",
-//		Gearbox:      "Automata",
-//		Model:        "740i",
-//		NumOfOwners:  3,
-//		Performance:  300,
-//		Status:       "Forgalomban van",
-//		TypeCode:     "E38",
-//		Year:         1994,
-//		Comment:      "yas",
-//	},
-//	{
-//		LicensePlate: "TEST112",
-//		Brand:        "BMW",
-//		Color:        "FEKETE",
-//		EngineSize:   4400,
-//		FirstReg:     "1994.01.01",
-//		FirstRegHun:  "1994.01.01",
-//		FuelType:     "Benzin",
-//		Gearbox:      "Automata",
-//		Model:        "740i",
-//		NumOfOwners:  3,
-//		Performance:  300,
-//		Status:       "Forgalomban van",
-//		TypeCode:     "E38",
-//		Year:         1994,
-//		Comment:      "yas",
-//	},
-//}
-
 func getCar(ctx *gin.Context) {
 	var requested models.Specs
 
 	requested.LicensePlate = ctx.Param("license_plate")
 	result := DB.First(&requested)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: result.Error.Error(),
-		})
+		sendError(result.Error.Error(), ctx)
 		return
 	}
 
@@ -69,38 +29,37 @@ func getCar(ctx *gin.Context) {
 	var accidents []models.Accident
 	var restrictions []models.Restriction
 	var mileages []models.Mileage
+	var general models.General
 
 	car.Specs = requested
 
 	accidentResults := DB.Find(&accidents, "license_plate = ?", car.Specs.LicensePlate)
 	if accidentResults.Error != nil {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: accidentResults.Error.Error(),
-		})
+		sendError(accidentResults.Error.Error(), ctx)
 		return
 	}
 	car.Accidents = accidents
 
 	restrictionResult := DB.Find(&restrictions, "license_plate = ? AND active = true", car.Specs.LicensePlate)
 	if restrictionResult.Error != nil {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: restrictionResult.Error.Error(),
-		})
+		sendError(restrictionResult.Error.Error(), ctx)
 		return
 	}
 	car.Restrictions = restrictions
 
 	mileageResult := DB.Find(&mileages, "license_plate = ?", car.Specs.LicensePlate)
 	if mileageResult.Error != nil {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: mileageResult.Error.Error(),
-		})
+		sendError(mileageResult.Error.Error(), ctx)
 		return
 	}
 	car.Mileage = mileages
+
+	generalResult := DB.Find(&general, "license_plate = ?", car.Specs.LicensePlate)
+	if generalResult.Error != nil {
+		sendError(generalResult.Error.Error(), ctx)
+		return
+	}
+	car.General = general
 
 	ctx.IndentedJSON(http.StatusOK, car)
 }
@@ -112,10 +71,7 @@ func getCars(ctx *gin.Context) {
 
 	result := DB.Find(&allSpecs)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: result.Error.Error(),
-		})
+		sendError(result.Error.Error(), ctx)
 		return
 	}
 
@@ -124,38 +80,37 @@ func getCars(ctx *gin.Context) {
 		var accidents []models.Accident
 		var restrictions []models.Restriction
 		var mileages []models.Mileage
+		var general models.General
 
 		car.Specs = specs
 
 		result := DB.Find(&accidents, "license_plate = ?", specs.LicensePlate)
 		if result.Error != nil {
-			ctx.IndentedJSON(http.StatusConflict, models.Response{
-				Status:  "fail",
-				Message: result.Error.Error(),
-			})
+			sendError(result.Error.Error(), ctx)
 			return
 		}
 		car.Accidents = accidents
 
 		result = DB.Find(&restrictions, "license_plate = ?", specs.LicensePlate)
 		if result.Error != nil {
-			ctx.IndentedJSON(http.StatusConflict, models.Response{
-				Status:  "fail",
-				Message: result.Error.Error(),
-			})
+			sendError(result.Error.Error(), ctx)
 			return
 		}
 		car.Restrictions = restrictions
 
 		result = DB.Find(&mileages, "license_plate = ?", specs.LicensePlate)
 		if result.Error != nil {
-			ctx.IndentedJSON(http.StatusConflict, models.Response{
-				Status:  "fail",
-				Message: result.Error.Error(),
-			})
+			sendError(result.Error.Error(), ctx)
 			return
 		}
 		car.Mileage = mileages
+
+		generalResult := DB.Find(&general, "license_plate = ?", car.Specs.LicensePlate)
+		if generalResult.Error != nil {
+			sendError(generalResult.Error.Error(), ctx)
+			return
+		}
+		car.General = general
 
 		returnCars = append(returnCars, car)
 	}
@@ -189,10 +144,7 @@ func createCar(ctx *gin.Context) {
 		result := DB.Create(&newSpecs)
 		if result.Error != nil {
 			tx.Rollback()
-			ctx.IndentedJSON(http.StatusConflict, models.Response{
-				Status:  "fail",
-				Message: result.Error.Error(),
-			})
+			sendError(result.Error.Error(), ctx)
 			return
 		}
 	}
@@ -211,10 +163,7 @@ func createCar(ctx *gin.Context) {
 		result := DB.Create(&newAccident)
 		if result.Error != nil {
 			tx.Rollback()
-			ctx.IndentedJSON(http.StatusConflict, models.Response{
-				Status:  "fail",
-				Message: result.Error.Error(),
-			})
+			sendError(result.Error.Error(), ctx)
 			return
 		}
 	}
@@ -222,10 +171,7 @@ func createCar(ctx *gin.Context) {
 	var existingRestrictions []models.Restriction
 	result = DB.Find(&existingRestrictions, "license_plate = ?", newSpecs.LicensePlate)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: result.Error.Error(),
-		})
+		sendError(result.Error.Error(), ctx)
 		return
 	}
 
@@ -259,10 +205,7 @@ newsLoop:
 		result := DB.Create(&newRestriction)
 		if result.Error != nil {
 			tx.Rollback()
-			ctx.IndentedJSON(http.StatusConflict, models.Response{
-				Status:  "fail",
-				Message: result.Error.Error(),
-			})
+			sendError(result.Error.Error(), ctx)
 			return
 		}
 	}
@@ -281,10 +224,7 @@ newsLoop:
 		result := DB.Create(&newMileage)
 		if result.Error != nil {
 			tx.Rollback()
-			ctx.IndentedJSON(http.StatusConflict, models.Response{
-				Status:  "fail",
-				Message: result.Error.Error(),
-			})
+			sendError(result.Error.Error(), ctx)
 			return
 		}
 	}
@@ -305,16 +245,20 @@ func deleteCar(ctx *gin.Context) {
 	result := DB.Where("license_plate = ?", deletableSpecs.LicensePlate).Delete(&deletableSpecs)
 
 	if result.RowsAffected == 0 {
-		ctx.IndentedJSON(http.StatusConflict, models.Response{
-			Status:  "fail",
-			Message: result.Error.Error(),
-		})
+		sendError(result.Error.Error(), ctx)
 		return
 	}
 
 	ctx.IndentedJSON(http.StatusCreated, models.Response{
 		Status:  "success",
 		Message: "Car was deleted successfully",
+	})
+}
+
+func sendError(error string, ctx *gin.Context) {
+	ctx.IndentedJSON(http.StatusConflict, models.Response{
+		Status:  "fail",
+		Message: error,
 	})
 }
 

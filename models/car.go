@@ -5,4 +5,5 @@ type Car struct {
 	Specs        Specs         `json:"specs"`
 	Restrictions []Restriction `json:"restrictions"`
 	Mileage      []Mileage     `json:"mileage"`
+	General      General       `json:"general"`
 }
