@@ -1,6 +1,6 @@
 package models
 
-type Query struct {
+type Car struct {
 	Accidents    []Accident    `json:"accidents"`
 	Specs        Specs         `json:"specs"`
 	Restrictions []Restriction `json:"restrictions"`

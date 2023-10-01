@@ -15,7 +15,7 @@ import (
 var DB *gorm.DB
 var Error error
 
-//var queries = []models.Specs{
+//var cars = []models.Specs{
 //	{
 //		LicensePlate: "TEST111",
 //		Brand:        "BMW",
@@ -52,26 +52,63 @@ var Error error
 //	},
 //}
 
-func getQuery(ctx *gin.Context) {
-	//licensePlate := ctx.Param("license_plate")
-	//fmt.Println(licensePlate)
-	//
-	//for _, query := range queries {
-	//	if strings.ToLower(query.LicensePlate) == strings.ToLower(licensePlate) {
-	//		ctx.IndentedJSON(http.StatusOK, query)
-	//		return
-	//	}
-	//}
-	//ctx.IndentedJSON(http.StatusNotFound, models.Response{
-	//	Status:  "fail",
-	//	Message: "not found",
-	//})
+func getCar(ctx *gin.Context) {
+	var requested models.Specs
+
+	requested.LicensePlate = ctx.Param("license_plate")
+	result := DB.First(&requested)
+	if result.Error != nil {
+		ctx.IndentedJSON(http.StatusConflict, models.Response{
+			Status:  "fail",
+			Message: result.Error.Error(),
+		})
+		return
+	}
+
+	var car models.Car
+	var accidents []models.Accident
+	var restrictions []models.Restriction
+	var mileages []models.Mileage
+
+	car.Specs = requested
+
+	accidentResults := DB.Find(&accidents, "license_plate = ?", car.Specs.LicensePlate)
+	if accidentResults.Error != nil {
+		ctx.IndentedJSON(http.StatusConflict, models.Response{
+			Status:  "fail",
+			Message: accidentResults.Error.Error(),
+		})
+		return
+	}
+	car.Accidents = accidents
+
+	restrictionResult := DB.Find(&restrictions, "license_plate = ? AND active = true", car.Specs.LicensePlate)
+	if restrictionResult.Error != nil {
+		ctx.IndentedJSON(http.StatusConflict, models.Response{
+			Status:  "fail",
+			Message: restrictionResult.Error.Error(),
+		})
+		return
+	}
+	car.Restrictions = restrictions
+
+	mileageResult := DB.Find(&mileages, "license_plate = ?", car.Specs.LicensePlate)
+	if mileageResult.Error != nil {
+		ctx.IndentedJSON(http.StatusConflict, models.Response{
+			Status:  "fail",
+			Message: mileageResult.Error.Error(),
+		})
+		return
+	}
+	car.Mileage = mileages
+
+	ctx.IndentedJSON(http.StatusOK, car)
 }
 
-func getQueries(ctx *gin.Context) {
+func getCars(ctx *gin.Context) {
 	var allSpecs []models.Specs
 
-	var returnQueries []models.Query
+	var returnCars []models.Car
 
 	result := DB.Find(&allSpecs)
 	if result.Error != nil {
@@ -83,12 +120,12 @@ func getQueries(ctx *gin.Context) {
 	}
 
 	for _, specs := range allSpecs {
-		var query models.Query
+		var car models.Car
 		var accidents []models.Accident
 		var restrictions []models.Restriction
 		var mileages []models.Mileage
 
-		query.Specs = specs
+		car.Specs = specs
 
 		result := DB.Find(&accidents, "license_plate = ?", specs.LicensePlate)
 		if result.Error != nil {
@@ -98,7 +135,7 @@ func getQueries(ctx *gin.Context) {
 			})
 			return
 		}
-		query.Accidents = accidents
+		car.Accidents = accidents
 
 		result = DB.Find(&restrictions, "license_plate = ?", specs.LicensePlate)
 		if result.Error != nil {
@@ -108,7 +145,7 @@ func getQueries(ctx *gin.Context) {
 			})
 			return
 		}
-		query.Restrictions = restrictions
+		car.Restrictions = restrictions
 
 		result = DB.Find(&mileages, "license_plate = ?", specs.LicensePlate)
 		if result.Error != nil {
@@ -118,22 +155,22 @@ func getQueries(ctx *gin.Context) {
 			})
 			return
 		}
-		query.Mileage = mileages
+		car.Mileage = mileages
 
-		returnQueries = append(returnQueries, query)
+		returnCars = append(returnCars, car)
 	}
 
-	ctx.IndentedJSON(http.StatusOK, returnQueries)
+	ctx.IndentedJSON(http.StatusOK, returnCars)
 }
 
-func createQuery(ctx *gin.Context) {
+func createCar(ctx *gin.Context) {
 	var newSpecs models.Specs
 	var newAccidents []models.Accident
 	var newRestrictions []models.Restriction
 	var newMileages []models.Mileage
-	var newQuery models.Query
+	var newCar models.Car
 
-	if err := ctx.BindJSON(&newQuery); err != nil {
+	if err := ctx.BindJSON(&newCar); err != nil {
 		ctx.IndentedJSON(http.StatusConflict, models.Response{
 			Status:  "fail",
 			Message: err.Error(),
@@ -141,10 +178,10 @@ func createQuery(ctx *gin.Context) {
 		return
 	}
 
-	newSpecs = newQuery.Specs
-	newAccidents = newQuery.Accidents
-	newRestrictions = newQuery.Restrictions
-	newMileages = newQuery.Mileage
+	newSpecs = newCar.Specs
+	newAccidents = newCar.Accidents
+	newRestrictions = newCar.Restrictions
+	newMileages = newCar.Mileage
 
 	tx := DB.Begin()
 	result := DB.First(&newSpecs)
@@ -255,12 +292,12 @@ newsLoop:
 	tx.Commit()
 	ctx.IndentedJSON(http.StatusCreated, models.Response{
 		Status:  "success",
-		Message: "Query was uploaded successfully",
+		Message: "Car was uploaded successfully",
 	})
 	return
 }
 
-func deleteQuery(ctx *gin.Context) {
+func deleteCar(ctx *gin.Context) {
 	var deletableSpecs models.Specs
 
 	deletableSpecs.LicensePlate = ctx.Param("license_plate")
@@ -277,7 +314,7 @@ func deleteQuery(ctx *gin.Context) {
 
 	ctx.IndentedJSON(http.StatusCreated, models.Response{
 		Status:  "success",
-		Message: "Query was deleted successfully",
+		Message: "Car was deleted successfully",
 	})
 }
 
@@ -304,10 +341,10 @@ func main() {
 	}
 
 	router := gin.Default()
-	//router.GET("/queries/:license_plate", getQuery)
-	router.GET("/queries", getQueries)
-	router.POST("/queries", createQuery)
-	router.DELETE("/queries/:license_plate", deleteQuery)
+	router.GET("/cars/:license_plate", getCar)
+	router.GET("/cars", getCars)
+	router.POST("/cars", createCar)
+	router.DELETE("/cars/:license_plate", deleteCar)
 
 	router.Run("localhost:3000")
 }
