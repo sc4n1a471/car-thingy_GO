@@ -3,9 +3,12 @@ package main
 import (
 	"Go_Thingy/models"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
+	"os"
 )
 
 var DB *gorm.DB
@@ -262,7 +265,21 @@ func deleteQuery(ctx *gin.Context) {
 }
 
 func main() {
-	dsn := "mysql_user:123456789A@tcp(10.11.12.140:3306)/cars_prod?parseTime=true"
+	err := godotenv.Load("env.env")
+	if err != nil {
+		log.Fatalf("Error loading env.env file")
+	}
+	dsn := os.Getenv("DB_USERNAME") +
+		":" +
+		os.Getenv("DB_PASSWORD") +
+		"@tcp(" +
+		os.Getenv("DB_IP") +
+		":" +
+		os.Getenv("DB_PORT") +
+		")/" +
+		os.Getenv("DB_NAME") +
+		"?parseTime=true"
+
 	DB, Error = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if Error != nil {
