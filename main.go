@@ -246,6 +246,50 @@ newsLoop:
 	return
 }
 
+func updateCar(ctx *gin.Context) {
+	var updatedCar models.Car
+	var updatedSpecs models.Specs
+	var updatedGeneral models.General
+
+	if err := ctx.BindJSON(&updatedCar); err != nil {
+		sendError(err.Error(), ctx)
+		return
+	}
+
+	updatedSpecs = updatedCar.Specs
+	updatedGeneral = updatedCar.General
+
+	tx := DB.Begin()
+
+	result := tx.Save(&updatedSpecs)
+	if result.Error != nil {
+		tx.Rollback()
+		sendError(Error.Error(), ctx)
+		return
+	}
+
+	result = tx.
+		Model(&updatedGeneral).
+		Select("latitude", "longitude", "created_at").
+		Updates(models.General{
+			Latitude:  updatedGeneral.Latitude,
+			Longitude: updatedGeneral.Longitude,
+			CreatedAt: updatedGeneral.CreatedAt,
+		})
+	if result.Error != nil {
+		tx.Rollback()
+		sendError(result.Error.Error(), ctx)
+		return
+	}
+
+	tx.Commit()
+	ctx.IndentedJSON(http.StatusCreated, models.Response{
+		Status:  "success",
+		Message: "Car was updated successfully",
+	})
+	return
+}
+
 func deleteCar(ctx *gin.Context) {
 	var deletableSpecs models.Specs
 
@@ -297,6 +341,7 @@ func main() {
 	router.GET("/cars/:license_plate", getCar)
 	router.GET("/cars", getCars)
 	router.POST("/cars", createCar)
+	router.PUT("/cars", updateCar)
 	router.DELETE("/cars/:license_plate", deleteCar)
 
 	router.Run("localhost:3000")

@@ -17,5 +17,5 @@ type Specs struct {
 	Status       string    `json:"status"`
 	TypeCode     string    `json:"type_code"`
 	Year         int       `json:"year"`
-	Comment      string    `json:"Comment"`
+	Comment      string    `json:"comment"`
 }
