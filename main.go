@@ -25,7 +25,7 @@ func getCar(ctx *gin.Context) {
 		return
 	}
 
-	var car models.Car
+	var car models.CarResult
 	var accidents []models.Accident
 	var restrictions []models.Restriction
 	var mileages []models.Mileage
@@ -61,13 +61,18 @@ func getCar(ctx *gin.Context) {
 	}
 	car.General = general
 
+	car.Inspections = getInspectionsHelper(ctx, requested.LicensePlate)
+	if car.Inspections == nil {
+		return
+	}
+
 	ctx.IndentedJSON(http.StatusOK, car)
 }
 
 func getCars(ctx *gin.Context) {
 	var allSpecs []models.Specs
 
-	var returnCars []models.Car
+	var returnCars []models.CarResult
 
 	result := DB.Find(&allSpecs)
 	if result.Error != nil {
@@ -76,7 +81,7 @@ func getCars(ctx *gin.Context) {
 	}
 
 	for _, specs := range allSpecs {
-		var car models.Car
+		var car models.CarResult
 		var accidents []models.Accident
 		var restrictions []models.Restriction
 		var mileages []models.Mileage
@@ -112,10 +117,50 @@ func getCars(ctx *gin.Context) {
 		}
 		car.General = general
 
+		car.Inspections = getInspectionsHelper(ctx, car.Specs.LicensePlate)
+		if car.Inspections == nil {
+			return
+		}
+
 		returnCars = append(returnCars, car)
 	}
 
 	ctx.IndentedJSON(http.StatusOK, returnCars)
+}
+
+func getInspectionsHelper(ctx *gin.Context, licensePlate string) []models.InspectionResult {
+	var inspections []models.Inspection
+	var inspectionResults []models.InspectionResult
+
+	result := DB.Find(&inspections, "license_plate = ?", licensePlate)
+	if result.Error != nil {
+		sendError(result.Error.Error(), ctx)
+		return nil
+	}
+
+	for _, inspection := range inspections {
+		var inspectionResult models.InspectionResult
+		inspectionResult.LicensePlate = inspection.LicensePlate
+		inspectionResult.Name = inspection.Name
+		inspectionResult.Base64 = inspection.LicensePlate + inspection.LicensePlate
+		// TODO: Convert image to base64
+
+		inspectionResults = append(inspectionResults, inspectionResult)
+	}
+
+	return inspectionResults
+}
+
+func getInspections(ctx *gin.Context) {
+	var inspectionResults []models.InspectionResult
+	licensePlate := ctx.Param("license_plate")
+
+	inspectionResults = getInspectionsHelper(ctx, licensePlate)
+	if inspectionResults == nil {
+		return
+	}
+
+	ctx.IndentedJSON(http.StatusOK, inspectionResults)
 }
 
 func createCar(ctx *gin.Context) {
@@ -125,6 +170,7 @@ func createCar(ctx *gin.Context) {
 	var newRestrictions []models.Restriction
 	var newMileages []models.Mileage
 	var newGeneral models.General
+	var newInspections []models.Inspection
 
 	if err := ctx.BindJSON(&newCar); err != nil {
 		sendError(err.Error(), ctx)
@@ -136,6 +182,7 @@ func createCar(ctx *gin.Context) {
 	newRestrictions = newCar.Restrictions
 	newMileages = newCar.Mileage
 	newGeneral = newCar.General
+	newInspections = newCar.Inspections
 
 	tx := DB.Begin()
 	result := tx.First(&newSpecs)
@@ -178,9 +225,6 @@ existingsLoop:
 	for _, existingRestriction := range existingRestrictions {
 		for _, newRestriction := range newRestrictions {
 			if existingRestriction.Restriction == newRestriction.Restriction {
-				fmt.Println(existingRestriction.Restriction)
-				fmt.Println(newRestriction.Restriction)
-				fmt.Println(existingRestriction.Restriction == newRestriction.Restriction)
 				continue existingsLoop
 			}
 		}
@@ -238,10 +282,59 @@ newsLoop:
 		}
 	}
 
+	createInspectionHelper(ctx, newInspections, tx)
+
 	tx.Commit()
 	ctx.IndentedJSON(http.StatusCreated, models.Response{
 		Status:  "success",
 		Message: "Car was uploaded successfully",
+	})
+	return
+}
+
+func createInspectionHelper(ctx *gin.Context, newInspections []models.Inspection, tx *gorm.DB) bool {
+	for _, newInspection := range newInspections {
+
+		var existingInspection models.Inspection
+		checkResult := tx.Where(&models.Inspection{
+			LicensePlate:  newInspection.LicensePlate,
+			Name:          newInspection.Name,
+			ImageLocation: newInspection.ImageLocation,
+		}).Find(&existingInspection)
+		if checkResult.RowsAffected != 0 {
+			continue
+		}
+
+		result := tx.Create(&newInspection)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return false
+		}
+	}
+	return true
+}
+
+func createInspections(ctx *gin.Context) {
+	var newInspections []models.Inspection
+
+	if err := ctx.BindJSON(&newInspections); err != nil {
+		sendError(err.Error(), ctx)
+		return
+	}
+
+	tx := DB.Begin()
+
+	successful := createInspectionHelper(ctx, newInspections, tx)
+
+	if !successful {
+		return
+	}
+
+	tx.Commit()
+	ctx.IndentedJSON(http.StatusCreated, models.Response{
+		Status:  "success",
+		Message: "Inspections were uploaded successfully",
 	})
 	return
 }
@@ -308,6 +401,31 @@ func deleteCar(ctx *gin.Context) {
 	})
 }
 
+func deleteInspectionsHelper(ctx *gin.Context, licensePlate string) bool {
+	var inspections []models.Inspection
+	result := DB.Where("license_plate = ?", licensePlate).Delete(&inspections)
+
+	if result.RowsAffected == 0 {
+		sendError(result.Error.Error(), ctx)
+		return false
+	}
+	return true
+}
+
+func deleteInspections(ctx *gin.Context) {
+	licensePlate := ctx.Param("license_plate")
+
+	success := deleteInspectionsHelper(ctx, licensePlate)
+
+	if !success {
+		return
+	}
+	ctx.IndentedJSON(http.StatusCreated, models.Response{
+		Status:  "success",
+		Message: "Inspections were deleted successfully",
+	})
+}
+
 func sendError(error string, ctx *gin.Context) {
 	ctx.IndentedJSON(http.StatusConflict, models.Response{
 		Status:  "fail",
@@ -343,6 +461,10 @@ func main() {
 	router.POST("/cars", createCar)
 	router.PUT("/cars", updateCar)
 	router.DELETE("/cars/:license_plate", deleteCar)
+
+	router.GET("/inspections/:license_plate", getInspections)
+	router.POST("/inspections", createInspections)
+	router.DELETE("/inspections/:license_plate", deleteInspections)
 
 	router.Run("localhost:3000")
 }
