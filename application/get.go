@@ -2,7 +2,11 @@ package application
 
 import (
 	"Go_Thingy/models"
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+	"os"
 )
 
 func getCar(ctx *gin.Context) {
@@ -115,13 +119,56 @@ func getInspectionsHelper(ctx *gin.Context, licensePlate string) []models.Inspec
 		var inspectionResult models.InspectionResult
 		inspectionResult.LicensePlate = inspection.LicensePlate
 		inspectionResult.Name = inspection.Name
-		inspectionResult.Base64 = inspection.LicensePlate + inspection.LicensePlate
-		// TODO: Convert image to base64
-
+		inspectionResult.Base64 = convertImagesToBase64(inspection.ImageLocation)
 		inspectionResults = append(inspectionResults, inspectionResult)
 	}
 
 	return inspectionResults
+}
+
+// Converts images in *imageLocation* directory to base64 format
+// Returns an array of string containing the base64 images
+// https://freshman.tech/snippets/go/image-to-base64/
+func convertImagesToBase64(imageLocation string) []string {
+	var convertedImages []string
+
+	inspectionLocation := "." + imageLocation
+	files, err := os.ReadDir(inspectionLocation)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+
+	for _, file := range files {
+		bytes, err := os.ReadFile(inspectionLocation + file.Name())
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+
+		var base64Encoding string
+
+		// Determine the content type of the image file
+		mimeType := http.DetectContentType(bytes)
+
+		// Prepend the appropriate URI scheme header depending
+		// on the MIME type
+		switch mimeType {
+		case "image/jpeg":
+			base64Encoding += "data:image/jpeg;base64,"
+		case "image/png":
+			base64Encoding += "data:image/png;base64,"
+		case "image/jpg":
+			base64Encoding += "data:image/jpg;base64,"
+		}
+
+		// Append the base64 encoded output
+		base64Encoding += base64.StdEncoding.EncodeToString(bytes)
+
+		// Print the full base64 representation of the image
+		convertedImages = append(convertedImages, base64Encoding)
+	}
+	return convertedImages
 }
 
 func getInspections(ctx *gin.Context) {
