@@ -2,7 +2,7 @@
 FROM golang:1.19-alpine
 
 # Work directory
-WORKDIR /docker-go
+WORKDIR /app
 
 # Installing dependencies
 COPY go.mod go.sum ./
