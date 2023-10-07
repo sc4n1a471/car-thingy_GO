@@ -3,10 +3,8 @@ package application
 import (
 	"Go_Thingy/models"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"log"
 	"net/http"
 	"os"
 )
@@ -15,10 +13,6 @@ var DB *gorm.DB
 var Error error
 
 func Api() {
-	err := godotenv.Load("env.env")
-	if err != nil {
-		log.Fatalf("Error loading env.env file")
-	}
 	dsn := os.Getenv("DB_USERNAME") +
 		":" +
 		os.Getenv("DB_PASSWORD") +
@@ -47,7 +41,8 @@ func Api() {
 	router.POST("/inspections", createInspections)
 	router.DELETE("/inspections/:license_plate", deleteInspections)
 
-	router.Run("localhost:3000")
+	//router.Run("localhost:3000")
+	http.ListenAndServe(":3000", router)
 }
 
 func sendError(error string, ctx *gin.Context) {
