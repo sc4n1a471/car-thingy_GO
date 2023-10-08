@@ -1,9 +1,9 @@
-name: Build, Publish, Redeploy Production
+name: Build, Publish, Redeploy Deevelopment
 
 on:
   push:
     branches:
-    - main
+    - dev
 
 jobs:
   docker:
@@ -31,15 +31,15 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: sc4n1a471/car-thingy_go:prod
+          tags: sc4n1a471/car-thingy_go:dev
 
   redeploy:
-    name: Redeploying on production server
+    name: Redeploying on development server
     runs-on: ubuntu-latest
     needs: [docker]
     steps:
       - name: Deploy docker container webhook
         uses: joelwmale/webhook-action@master
         env:
-          WEBHOOK_URL: ${{ secrets.DEPLOY_PROD_WEBHOOK_URL  }}
+          WEBHOOK_URL: ${{ secrets.DEPLOY_DEV_WEBHOOK_URL  }}
           data: "{ 'myField': 'myFieldValue'}"
