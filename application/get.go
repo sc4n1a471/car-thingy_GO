@@ -132,8 +132,6 @@ func getInspectionsHelper(ctx *gin.Context, licensePlate string) []models.Inspec
 func convertImagesToBase64(imageLocation string) []string {
 	var convertedImages []string
 
-	log.Println(os.Getwd())
-
 	inspectionLocation := imageLocation
 	files, err := os.ReadDir(inspectionLocation)
 	if err != nil {
