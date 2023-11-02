@@ -37,6 +37,8 @@ func Api() {
 	router.PUT("/cars", updateCar)
 	router.DELETE("/cars/:license_plate", deleteCar)
 
+	router.POST("/license_plate", createLicensePlate)
+
 	router.GET("/inspections/:license_plate", getInspections)
 	router.POST("/inspections", createInspections)
 	router.DELETE("/inspections/:license_plate", deleteInspections)
