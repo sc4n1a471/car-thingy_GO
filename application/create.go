@@ -134,6 +134,47 @@ newsLoop:
 	return
 }
 
+func createLicensePlate(ctx *gin.Context) {
+	var newCar models.Car
+	var newSpecs models.Specs
+	var newGeneral models.General
+
+	if err := ctx.BindJSON(&newCar); err != nil {
+		sendError(err.Error(), ctx)
+		return
+	}
+
+	newSpecs = newCar.Specs
+	newGeneral = newCar.General
+
+	tx := DB.Begin()
+	result := tx.First(&newSpecs)
+	if result.RowsAffected == 0 {
+		//result := tx.Create(&newSpecs)
+		result := tx.Select("LicensePlate").Create(&newSpecs)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+	}
+
+	result = tx.Find(&newGeneral, "license_plate = ?", newSpecs.LicensePlate)
+	if result.RowsAffected == 0 {
+		result := tx.Create(&newGeneral)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+	}
+
+	tx.Commit()
+
+	sendData("License plate was uploaded successfully", ctx)
+	return
+}
+
 func createInspectionHelper(ctx *gin.Context, newInspections []models.Inspection, tx *gorm.DB) bool {
 	for _, newInspection := range newInspections {
 
