@@ -12,6 +12,7 @@ func getCar(ctx *gin.Context) {
 	var requested models.Specs
 	var car models.CarResult
 	var general models.General
+	var returnData []models.CarResult
 
 	requested.LicensePlate = ctx.Param("license_plate")
 	result := DB.First(&requested)
@@ -49,7 +50,8 @@ func getCar(ctx *gin.Context) {
 		return
 	}
 
-	sendData(car, ctx)
+	returnData = append(returnData, car)
+	sendData(returnData, ctx)
 }
 
 func getCars(ctx *gin.Context) {
