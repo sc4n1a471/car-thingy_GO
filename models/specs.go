@@ -7,8 +7,8 @@ type Specs struct {
 	Brand        string    `json:"brand"`
 	Color        string    `json:"color"`
 	EngineSize   int       `json:"engine_size"`
-	FirstReg     time.Time `json:"first_reg"`
-	FirstRegHun  time.Time `json:"first_reg_hun"`
+	FirstReg     time.Time `json:"-"`
+	FirstRegHun  time.Time `json:"-"`
 	FuelType     string    `json:"fuel_type"`
 	Gearbox      string    `json:"gearbox"`
 	Model        string    `json:"model"`
