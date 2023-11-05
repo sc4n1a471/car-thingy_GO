@@ -9,9 +9,10 @@ import (
 )
 
 func getCar(ctx *gin.Context) {
-	var requested models.Specs
+	var requested models.LicensePlate
 	var car models.CarResult
-	var general models.General
+	var coordinates models.Coordinate
+	var returnData []models.CarResult
 
 	requested.LicensePlate = ctx.Param("license_plate")
 	result := DB.First(&requested)
@@ -20,83 +21,102 @@ func getCar(ctx *gin.Context) {
 		return
 	}
 
-	car.Specs = requested
+	car.LicensePlate = requested
 
-	car.Accidents = getAccidents(ctx, car.Specs.LicensePlate)
+	car.Specs = getSpecs(ctx, requested.LicensePlate)
+	//if car.Specs == (models.Specs{}) {
+	//	sendError("Specs is null?", ctx)
+	//	return
+	//}
+
+	car.Accidents = getAccidents(ctx, requested.LicensePlate)
 	if car.Accidents == nil {
 		return
 	}
 
-	car.Restrictions = getRestrictions(ctx, car.Specs.LicensePlate)
+	car.Restrictions = getRestrictions(ctx, requested.LicensePlate)
 	if car.Restrictions == nil {
 		return
 	}
 
-	car.Mileage = getMileages(ctx, car.Specs.LicensePlate)
+	car.Mileage = getMileages(ctx, requested.LicensePlate)
 	if car.Mileage == nil {
 		return
 	}
 
-	result = DB.Find(&general, "license_plate = ?", car.Specs.LicensePlate)
+	result = DB.Find(&coordinates, "license_plate = ?", requested.LicensePlate)
 	if result.Error != nil {
 		sendError(result.Error.Error(), ctx)
 		return
 	}
-	car.General = general
+	car.Coordinates = coordinates
 
 	car.Inspections = getInspectionsHelper(ctx, requested.LicensePlate)
 	if car.Inspections == nil {
 		return
 	}
 
-	sendData(car, ctx)
+	returnData = append(returnData, car)
+	sendData(returnData, ctx)
 }
 
 func getCars(ctx *gin.Context) {
-	var allSpecs []models.Specs
+	var allLicensePlates []models.LicensePlate
 
 	var returnCars []models.CarResult
 
-	result := DB.Find(&allSpecs)
+	result := DB.Find(&allLicensePlates)
 	if result.Error != nil {
 		sendError(result.Error.Error(), ctx)
 		return
 	}
 
-	for _, specs := range allSpecs {
+	for _, licensePlate := range allLicensePlates {
 		var car models.CarResult
-		var general models.General
+		var coordinates models.Coordinate
 
-		car.Specs = specs
+		car.LicensePlate = licensePlate
 
-		car.Accidents = getAccidents(ctx, specs.LicensePlate)
+		car.Specs = getSpecs(ctx, licensePlate.LicensePlate)
+		//if car.Specs == (models.Specs{}) {
+		//	sendError("Specs is null?", ctx)
+		//	return
+		//}
+
+		car.Accidents = getAccidents(ctx, licensePlate.LicensePlate)
 		if car.Accidents == nil {
 			return
 		}
 
-		car.Restrictions = getRestrictions(ctx, specs.LicensePlate)
+		car.Restrictions = getRestrictions(ctx, licensePlate.LicensePlate)
 		if car.Restrictions == nil {
 			return
 		}
 
-		car.Mileage = getMileages(ctx, specs.LicensePlate)
+		car.Mileage = getMileages(ctx, licensePlate.LicensePlate)
 		if car.Mileage == nil {
 			return
 		}
 
-		result := DB.Find(&general, "license_plate = ?", specs.LicensePlate)
+		result := DB.Find(&coordinates, "license_plate = ?", licensePlate.LicensePlate)
 		if result.Error != nil {
 			sendError(result.Error.Error(), ctx)
 			return
 		}
-		car.General = general
+		car.Coordinates = coordinates
 
-		car.Inspections = getInspectionsHelper(ctx, car.Specs.LicensePlate)
-		if car.Inspections == nil {
-			return
-		}
+		// Temporarily disabled
+		car.Inspections = []models.InspectionResult{}
+		//car.Inspections = getInspectionsHelper(ctx, car.Specs.LicensePlate)
+		//if car.Inspections == nil {
+		//	return
+		//}
 
 		returnCars = append(returnCars, car)
+	}
+
+	if returnCars == nil {
+		returnCars = []models.CarResult{}
 	}
 
 	sendData(returnCars, ctx)
@@ -210,4 +230,15 @@ func getMileages(ctx *gin.Context, licensePlate string) []models.Mileage {
 		return nil
 	}
 	return mileages
+}
+
+func getSpecs(ctx *gin.Context, licensePlate string) models.Specs {
+	var specs models.Specs
+
+	result := DB.Find(&specs, "license_plate = ?", licensePlate)
+	if result.Error != nil {
+		return models.Specs{}
+	}
+
+	return specs
 }

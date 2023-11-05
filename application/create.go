@@ -2,18 +2,18 @@ package application
 
 import (
 	"Go_Thingy/models"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func createCar(ctx *gin.Context) {
 	var newCar models.Car
+	var newLicensePlate models.LicensePlate
 	var newSpecs models.Specs
 	var newAccidents []models.Accident
 	var newRestrictions []models.Restriction
 	var newMileages []models.Mileage
-	var newGeneral models.General
+	var newCoordinates models.Coordinate
 	var newInspections []models.Inspection
 
 	if err := ctx.BindJSON(&newCar); err != nil {
@@ -21,20 +21,39 @@ func createCar(ctx *gin.Context) {
 		return
 	}
 
+	newLicensePlate = newCar.LicensePlate
 	newSpecs = newCar.Specs
 	newAccidents = newCar.Accidents
 	newRestrictions = newCar.Restrictions
 	newMileages = newCar.Mileage
-	newGeneral = newCar.General
+	newCoordinates = newCar.Coordinates
 	newInspections = newCar.Inspections
 
 	tx := DB.Begin()
-	result := tx.First(&newSpecs)
+
+	result := tx.First(&newLicensePlate)
+	if result.RowsAffected == 0 {
+		result := tx.Create(&newLicensePlate)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+	}
+
+	result = tx.First(&newSpecs)
 	if result.RowsAffected == 0 {
 		result := tx.Create(&newSpecs)
 		if result.Error != nil {
 			tx.Rollback()
 			sendError(result.Error.Error(), ctx)
+			return
+		}
+	} else {
+		result := tx.Save(&newSpecs)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(Error.Error(), ctx)
 			return
 		}
 	}
@@ -59,7 +78,7 @@ func createCar(ctx *gin.Context) {
 	}
 
 	var existingRestrictions []models.Restriction
-	result = DB.Find(&existingRestrictions, "license_plate = ?", newSpecs.LicensePlate)
+	result = DB.Find(&existingRestrictions, "license_plate = ?", newLicensePlate.LicensePlate)
 	if result.Error != nil {
 		sendError(result.Error.Error(), ctx)
 		return
@@ -72,7 +91,6 @@ existingsLoop:
 				continue existingsLoop
 			}
 		}
-		fmt.Println(existingRestriction)
 		tx.Model(&models.Restriction{}).
 			Where(
 				"license_plate = ? AND restriction = ?",
@@ -116,9 +134,9 @@ newsLoop:
 		}
 	}
 
-	result = tx.Find(&newGeneral, "license_plate = ?", newSpecs.LicensePlate)
+	result = tx.Find(&newCoordinates, "license_plate = ?", newLicensePlate.LicensePlate)
 	if result.RowsAffected == 0 {
-		result := tx.Create(&newGeneral)
+		result := tx.Create(&newCoordinates)
 		if result.Error != nil {
 			tx.Rollback()
 			sendError(result.Error.Error(), ctx)
@@ -131,6 +149,46 @@ newsLoop:
 	tx.Commit()
 
 	sendData("Car was uploaded successfully", ctx)
+	return
+}
+
+func createLicensePlate(ctx *gin.Context) {
+	var newCar models.Car
+	var newLicensePlate models.LicensePlate
+	var newCoordinates models.Coordinate
+
+	if err := ctx.BindJSON(&newCar); err != nil {
+		sendError(err.Error(), ctx)
+		return
+	}
+
+	newLicensePlate = newCar.LicensePlate
+	newCoordinates = newCar.Coordinates
+
+	tx := DB.Begin()
+	result := tx.First(&newLicensePlate)
+	if result.RowsAffected == 0 {
+		result := tx.Create(&newLicensePlate)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+	}
+
+	result = tx.Find(&newCoordinates, "license_plate = ?", newLicensePlate.LicensePlate)
+	if result.RowsAffected == 0 {
+		result := tx.Create(&newCoordinates)
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+	}
+
+	tx.Commit()
+
+	sendData("License plate was uploaded successfully", ctx)
 	return
 }
 

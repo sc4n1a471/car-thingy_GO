@@ -6,11 +6,11 @@ import (
 )
 
 func deleteCar(ctx *gin.Context) {
-	var deletableSpecs models.Specs
+	var deletableLicensePlate models.LicensePlate
 
-	deletableSpecs.LicensePlate = ctx.Param("license_plate")
+	deletableLicensePlate.LicensePlate = ctx.Param("license_plate")
 
-	result := DB.Where("license_plate = ?", deletableSpecs.LicensePlate).Delete(&deletableSpecs)
+	result := DB.Where("license_plate = ?", deletableLicensePlate.LicensePlate).Delete(&deletableLicensePlate)
 
 	if result.RowsAffected == 0 {
 		sendError(result.Error.Error(), ctx)
