@@ -7,20 +7,20 @@ import (
 
 func updateCar(ctx *gin.Context) {
 	var updatedCar models.Car
-	var updatedSpecs models.Specs
-	var updatedGeneral models.General
+	var updatedLicensePlate models.LicensePlate
+	var updatedCoordinates models.Coordinate
 
 	if err := ctx.BindJSON(&updatedCar); err != nil {
 		sendError(err.Error(), ctx)
 		return
 	}
 
-	updatedSpecs = updatedCar.Specs
-	updatedGeneral = updatedCar.General
+	updatedLicensePlate = updatedCar.LicensePlate
+	updatedCoordinates = updatedCar.Coordinates
 
 	tx := DB.Begin()
 
-	result := tx.Save(&updatedSpecs)
+	result := tx.Save(&updatedLicensePlate)
 	if result.Error != nil {
 		tx.Rollback()
 		sendError(Error.Error(), ctx)
@@ -28,12 +28,11 @@ func updateCar(ctx *gin.Context) {
 	}
 
 	result = tx.
-		Model(&updatedGeneral).
-		Select("latitude", "longitude", "created_at").
-		Updates(models.General{
-			Latitude:  updatedGeneral.Latitude,
-			Longitude: updatedGeneral.Longitude,
-			CreatedAt: updatedGeneral.CreatedAt,
+		Model(&updatedCoordinates).
+		Select("latitude", "longitude").
+		Updates(models.Coordinate{
+			Latitude:  updatedCoordinates.Latitude,
+			Longitude: updatedCoordinates.Longitude,
 		})
 	if result.Error != nil {
 		tx.Rollback()
