@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// Returns a single car requested parameter with only the specs and coordinates
 func getCar(ctx *gin.Context) {
 	var requested models.LicensePlate
 	var car models.CarResult
@@ -24,10 +25,6 @@ func getCar(ctx *gin.Context) {
 	car.LicensePlate = requested
 
 	car.Specs = getSpecs(ctx, requested.LicensePlate)
-	//if car.Specs == (models.Specs{}) {
-	//	sendError("Specs is null?", ctx)
-	//	return
-	//}
 
 	car.Accidents = getAccidents(ctx, requested.LicensePlate)
 	if car.Accidents == nil {
@@ -60,6 +57,7 @@ func getCar(ctx *gin.Context) {
 	sendData(returnData, ctx)
 }
 
+// Returns all cars in the database with only the specs and coordinates
 func getCars(ctx *gin.Context) {
 	var allLicensePlates []models.LicensePlate
 
@@ -78,10 +76,48 @@ func getCars(ctx *gin.Context) {
 		car.LicensePlate = licensePlate
 
 		car.Specs = getSpecs(ctx, licensePlate.LicensePlate)
-		//if car.Specs == (models.Specs{}) {
-		//	sendError("Specs is null?", ctx)
-		//	return
-		//}
+
+		car.Accidents = []models.Accident{}
+		car.Restrictions = []models.Restriction{}
+		car.Mileage = []models.Mileage{}
+		car.Inspections = []models.InspectionResult{}
+
+		result := DB.Find(&coordinates, "license_plate = ?", licensePlate.LicensePlate)
+		if result.Error != nil {
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+		car.Coordinates = coordinates
+
+		returnCars = append(returnCars, car)
+	}
+
+	if returnCars == nil {
+		returnCars = []models.CarResult{}
+	}
+
+	sendData(returnCars, ctx)
+}
+
+// Returns all cars in the database with all information including inspection images
+func getCarsAllData(ctx *gin.Context) {
+	var allLicensePlates []models.LicensePlate
+
+	var returnCars []models.CarResult
+
+	result := DB.Find(&allLicensePlates)
+	if result.Error != nil {
+		sendError(result.Error.Error(), ctx)
+		return
+	}
+
+	for _, licensePlate := range allLicensePlates {
+		var car models.CarResult
+		var coordinates models.Coordinate
+
+		car.LicensePlate = licensePlate
+
+		car.Specs = getSpecs(ctx, licensePlate.LicensePlate)
 
 		car.Accidents = getAccidents(ctx, licensePlate.LicensePlate)
 		if car.Accidents == nil {
@@ -105,12 +141,11 @@ func getCars(ctx *gin.Context) {
 		}
 		car.Coordinates = coordinates
 
-		// Temporarily disabled
 		car.Inspections = []models.InspectionResult{}
-		//car.Inspections = getInspectionsHelper(ctx, car.Specs.LicensePlate)
-		//if car.Inspections == nil {
-		//	return
-		//}
+		car.Inspections = getInspectionsHelper(ctx, car.Specs.LicensePlate)
+		if car.Inspections == nil {
+			return
+		}
 
 		returnCars = append(returnCars, car)
 	}
@@ -122,6 +157,19 @@ func getCars(ctx *gin.Context) {
 	sendData(returnCars, ctx)
 }
 
+func getCoordinates(ctx *gin.Context) {
+	var coordinates []models.Coordinate
+	result := DB.Find(&coordinates)
+	if result.Error != nil {
+		sendError(result.Error.Error(), ctx)
+		return
+	}
+	sendData(coordinates, ctx)
+}
+
+// ========== MARK: - Helper functions ==========
+
+// Returns all inspections for a given license plate
 func getInspectionsHelper(ctx *gin.Context, licensePlate string) []models.InspectionResult {
 	var inspections []models.Inspection
 	var inspectionResults []models.InspectionResult
