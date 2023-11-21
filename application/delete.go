@@ -11,6 +11,12 @@ func deleteCar(ctx *gin.Context) {
 
 	deletableLicensePlate.LicensePlate = ctx.Param("license_plate")
 
+	success := deleteInspectionsHelper(ctx, deletableLicensePlate.LicensePlate)
+
+	if !success {
+		sendData("Inspections were not deleted successfully", ctx)
+	}
+
 	result := DB.Where("license_plate = ?", deletableLicensePlate.LicensePlate).Delete(&deletableLicensePlate)
 
 	if result.RowsAffected == 0 {
