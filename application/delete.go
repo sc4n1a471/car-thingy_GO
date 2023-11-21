@@ -3,6 +3,7 @@ package application
 import (
 	"Go_Thingy/models"
 	"github.com/gin-gonic/gin"
+	"os"
 )
 
 func deleteCar(ctx *gin.Context) {
@@ -22,8 +23,22 @@ func deleteCar(ctx *gin.Context) {
 
 func deleteInspectionsHelper(ctx *gin.Context, licensePlate string) bool {
 	var inspections []models.Inspection
-	result := DB.Where("license_plate = ?", licensePlate).Delete(&inspections)
 
+	result := DB.Find(&inspections, "license_plate = ?", licensePlate)
+	if result.RowsAffected == 0 {
+		sendError(result.Error.Error(), ctx)
+		return false
+	}
+
+	for _, inspection := range inspections {
+		errorResult := os.RemoveAll(inspection.ImageLocation)
+		if errorResult != nil {
+			sendError(errorResult.Error(), ctx)
+			return false
+		}
+	}
+
+	result = DB.Where("license_plate = ?", licensePlate).Delete(&inspections)
 	if result.RowsAffected == 0 {
 		sendError(result.Error.Error(), ctx)
 		return false
