@@ -33,6 +33,7 @@ func Api() {
 	router := gin.Default()
 	router.GET("/cars/:license_plate", getCar)
 	router.GET("/cars", getCars)
+	router.GET("/cars_all_data", getCarsAllData)
 	router.POST("/cars", createCar)
 	router.PUT("/cars", updateCar)
 	router.DELETE("/cars/:license_plate", deleteCar)
@@ -42,6 +43,8 @@ func Api() {
 	router.GET("/inspections/:license_plate", getInspections)
 	router.POST("/inspections", createInspections)
 	router.DELETE("/inspections/:license_plate", deleteInspections)
+
+	router.GET("/coordinates", getCoordinates)
 
 	//router.Run("localhost:3000")
 	http.ListenAndServe(":3000", router)
