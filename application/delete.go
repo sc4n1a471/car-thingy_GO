@@ -15,6 +15,7 @@ func deleteCar(ctx *gin.Context) {
 
 	if !success {
 		sendData("Inspections were not deleted successfully", ctx)
+		return
 	}
 
 	result := DB.Where("license_plate = ?", deletableLicensePlate.LicensePlate).Delete(&deletableLicensePlate)
@@ -32,8 +33,7 @@ func deleteInspectionsHelper(ctx *gin.Context, licensePlate string) bool {
 
 	result := DB.Find(&inspections, "license_plate = ?", licensePlate)
 	if result.RowsAffected == 0 {
-		sendError(result.Error.Error(), ctx)
-		return false
+		return true
 	}
 
 	for _, inspection := range inspections {
