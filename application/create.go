@@ -39,6 +39,19 @@ func createCar(ctx *gin.Context) {
 			sendError(result.Error.Error(), ctx)
 			return
 		}
+	} else {
+		result = tx.
+			Model(&newLicensePlate).
+			Select("updated_at").
+			Updates(models.LicensePlate{
+				UpdatedAt: newCar.LicensePlate.UpdatedAt,
+			})
+		if result.Error != nil {
+			tx.Rollback()
+			sendError(result.Error.Error(), ctx)
+			return
+		}
+
 	}
 
 	result = tx.First(&newSpecs)
