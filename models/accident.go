@@ -1,7 +1,7 @@
 package models
 
 type Accident struct {
-	LicensePlate string `json:"license_plate"`
-	AccidentDate string `json:"accident_date"`
+	LicensePlate string `json:"licensePlate"`
+	AccidentDate string `json:"accidentDate"`
 	Role         string `json:"role"`
 }

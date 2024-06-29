@@ -1,7 +1,7 @@
 package models
 
 type Inspection struct {
-	LicensePlate  string `json:"license_plate"`
+	LicensePlate  string `json:"licensePlate"`
 	Name          string `json:"name"`
-	ImageLocation string `json:"image_location"`
+	ImageLocation string `json:"imageLocation"`
 }
