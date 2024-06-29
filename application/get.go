@@ -3,9 +3,11 @@ package application
 import (
 	"Go_Thingy/models"
 	"encoding/base64"
-	"github.com/gin-gonic/gin"
 	"log"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // Returns a single car requested parameter with only the specs and coordinates
@@ -24,7 +26,7 @@ func getCar(ctx *gin.Context) {
 
 	car.LicensePlate = requested
 
-	car.Specs = getSpecs(ctx, requested.LicensePlate)
+	car.Specs = getSpecs(ctx, requested.LicensePlate, false)
 
 	car.Accidents = getAccidents(ctx, requested.LicensePlate)
 	if car.Accidents == nil {
@@ -75,7 +77,7 @@ func getCars(ctx *gin.Context) {
 
 		car.LicensePlate = licensePlate
 
-		car.Specs = getSpecs(ctx, licensePlate.LicensePlate)
+		car.Specs = getSpecs(ctx, licensePlate.LicensePlate, true)
 
 		car.Accidents = []models.Accident{}
 		car.Restrictions = []models.Restriction{}
@@ -117,7 +119,7 @@ func getCarsAllData(ctx *gin.Context) {
 
 		car.LicensePlate = licensePlate
 
-		car.Specs = getSpecs(ctx, licensePlate.LicensePlate)
+		car.Specs = getSpecs(ctx, licensePlate.LicensePlate, false)
 
 		car.Accidents = getAccidents(ctx, licensePlate.LicensePlate)
 		if car.Accidents == nil {
@@ -280,10 +282,15 @@ func getMileages(ctx *gin.Context, licensePlate string) []models.Mileage {
 	return mileages
 }
 
-func getSpecs(ctx *gin.Context, licensePlate string) models.Specs {
+func getSpecs(ctx *gin.Context, licensePlate string, selectiveSpecs bool) models.Specs {
 	var specs models.Specs
 
-	result := DB.Find(&specs, "license_plate = ?", licensePlate)
+	var result *gorm.DB
+	if selectiveSpecs {
+		result = DB.Select("license_plate, brand, model, type_code, year").Find(&specs, "license_plate = ?", licensePlate)
+	} else {
+		result = DB.Find(&specs, "license_plate = ?", licensePlate)
+	}
 	if result.Error != nil {
 		return models.Specs{}
 	}

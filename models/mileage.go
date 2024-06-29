@@ -1,7 +1,7 @@
 package models
 
 type Mileage struct {
-	LicensePlate string `json:"license_plate"`
+	LicensePlate string `json:"licensePlate"`
 	Mileage      int    `json:"mileage"`
-	MileageDate  string `json:"mileage_date"`
+	MileageDate  string `json:"mileageDate"`
 }

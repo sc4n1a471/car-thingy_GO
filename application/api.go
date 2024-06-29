@@ -2,11 +2,12 @@ package application
 
 import (
 	"Go_Thingy/models"
+	"net/http"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"net/http"
-	"os"
 )
 
 var DB *gorm.DB
@@ -31,19 +32,19 @@ func Api() {
 	}
 
 	router := gin.Default()
-	router.GET("/cars/:license_plate", getCar)
+	router.GET("/cars/:license-plate", getCar)
 	router.GET("/cars", getCars)
-	router.GET("/cars_all_data", getCarsAllData)
+	router.GET("/cars-all-data", getCarsAllData)
 	router.POST("/cars", createCar)
 	router.PUT("/cars", updateCar)
-	router.DELETE("/cars/:license_plate", deleteCar)
+	router.DELETE("/cars/:license-plate", deleteCar)
 
-	router.POST("/license_plate", createLicensePlate)
-	router.PUT("/license_plate/:license_plate", updateLicensePLate)
+	router.POST("/license-plate", createLicensePlate)
+	router.PUT("/license_plate/:license-plate", updateLicensePLate)
 
-	router.GET("/inspections/:license_plate", getInspections)
+	router.GET("/inspections/:license-plate", getInspections)
 	router.POST("/inspections", createInspections)
-	router.DELETE("/inspections/:license_plate", deleteInspections)
+	router.DELETE("/inspections/:license-plate", deleteInspections)
 
 	router.GET("/coordinates", getCoordinates)
 

@@ -1,8 +1,8 @@
 package models
 
 type Restriction struct {
-	LicensePlate    string `json:"license_plate"`
+	LicensePlate    string `json:"licensePlate"`
 	Restriction     string `json:"restriction"`
-	RestrictionDate string `json:"restriction_date"`
+	RestrictionDate string `json:"restrictionDate"`
 	Active          bool   `json:"active"`
 }
