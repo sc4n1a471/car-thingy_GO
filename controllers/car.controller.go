@@ -216,7 +216,7 @@ newsLoop:
 
 	// MARK: - Mileages
 	for _, newMileage := range newMileages {
-		checkResult := tx.Find(&newMileage)
+		checkResult := tx.Where("car_id = ? AND mileage = ?", newMileage.CarID, newMileage.Mileage).Find(&newMileage)
 		if checkResult.RowsAffected != 0 {
 			continue
 		}
