@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Go_Thingy/application"
+	"Go_Thingy_GO/application"
 )
 
 func main() {
