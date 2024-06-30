@@ -1,8 +1,8 @@
 package models
 
 type Restriction struct {
-	LicensePlate    string `json:"licensePlate"`
-	Restriction     string `json:"restriction"`
-	RestrictionDate string `json:"restrictionDate"`
-	Active          bool   `json:"active"`
+	ID          int    `json:"id" gorm:"primaryKey,autoIncrement"`
+	CarID       string `json:"licensePlate" gorm:"size:255"`
+	Restriction string `json:"restriction"`
+	IsActive    bool   `json:"isActive" gorm:"default:true"`
 }

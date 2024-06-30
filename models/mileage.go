@@ -1,7 +1,8 @@
 package models
 
 type Mileage struct {
-	LicensePlate string `json:"licensePlate"`
-	Mileage      int    `json:"mileage"`
-	MileageDate  string `json:"mileageDate"`
+	ID      int    `json:"id" gorm:"primaryKey,autoIncrement"`
+	CarID   string `json:"licensePlate" gorm:"size:255"`
+	Mileage int    `json:"mileage"`
+	Date    string `json:"date"`
 }
