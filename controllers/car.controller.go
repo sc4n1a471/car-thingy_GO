@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -129,6 +130,8 @@ func CreateCar(ctx *gin.Context) {
 		SendError(err.Error(), ctx)
 		return
 	}
+
+	fmt.Println(newCar)
 
 	if newCar.Accidents != nil {
 		newAccidents = *newCar.Accidents
