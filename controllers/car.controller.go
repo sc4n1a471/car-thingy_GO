@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -131,8 +130,6 @@ func CreateCar(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Println(newCar)
-
 	if newCar.Accidents != nil {
 		newAccidents = *newCar.Accidents
 	}
@@ -148,12 +145,39 @@ func CreateCar(ctx *gin.Context) {
 
 	tx := DB.Begin()
 
-	result := tx.First(&newCar)
+	var existingCar models.Car
+	result := tx.First(&existingCar, "id = ?", newCar.ID)
 	if result.RowsAffected == 0 {
 		result := tx.Create(&newCar)
 		if result.Error != nil {
 			tx.Rollback()
 			SendError(result.Error.Error(), ctx)
+			return
+		}
+	} else {
+		// Update existing car
+		// In case of an unknown car but saved license plate and want to update its data, update only selected fields
+		result := tx.
+			Select(
+				"Comment",
+				"Brand",
+				"Color",
+				"EngineSize",
+				"FirstReg",
+				"FirstRegHun",
+				"FuelType",
+				"Gearbox",
+				"Model",
+				"NumOfOwners",
+				"Performance",
+				"Status",
+				"TypeCode",
+				"Year",
+				"UpdatedAt").
+			Save(&newCar)
+		if result.Error != nil {
+			tx.Rollback()
+			SendError(Error.Error(), ctx)
 			return
 		}
 	}
