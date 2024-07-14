@@ -1,9 +1,9 @@
-name: Build, Publish, Redeploy Development
+name: Build, Publish, Redeploy Production
 
 on:
   push:
     branches:
-    - dev
+    - main
 
 jobs:
   docker:
