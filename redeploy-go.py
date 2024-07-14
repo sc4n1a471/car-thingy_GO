@@ -15,6 +15,10 @@ def parse_payload():
 
 def main():
         version, env = parse_payload()
+        
+        if version == "":
+                print("Version is empty, getting latest version...")
+                version = 'latest'
 
         if env == 'prod':
                 print("Redeploying production container...")
