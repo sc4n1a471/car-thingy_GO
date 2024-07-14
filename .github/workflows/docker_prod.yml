@@ -50,6 +50,9 @@ jobs:
     env:  
       VERSION: "latest"
     steps:
+      -
+        name: Checkout 
+        uses: actions/checkout@v2
       - 
         name: Set variables
         run: |
