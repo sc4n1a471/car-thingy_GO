@@ -47,10 +47,21 @@ jobs:
     name: Redeploying on development server
     runs-on: ubuntu-latest
     needs: [docker]
+    env:
+      VERSION: "latest"
     steps:
+      -
+        name: Checkout 
+        uses: actions/checkout@v2
       - 
+        name: Set variables
+        run: |
+          ls
+          VER=$(cat version)
+          echo "VERSION=$VER" >> $GITHUB_ENV
+      -
         name: Deploy docker container webhook
         uses: joelwmale/webhook-action@master
         with:
           url: ${{ secrets.DEPLOY_WEBHOOK_URL  }}
-          body: "{ 'version': '${{ env.VERSION  }}', 'env': 'dev' }"
+          body: '{ "version": "${{ env.VERSION  }}", "env": "dev" }'
