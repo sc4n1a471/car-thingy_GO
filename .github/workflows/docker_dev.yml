@@ -11,7 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REPO: ${{ secrets.DOCKERHUB_REPO }}
+      VERSION: "latest"
     steps:
+      - 
+        name: Set variables
+        run: |
+          VER=$(cat ./version)
+          echo "VERSION=$VER" >> $GITHUB_ENV
       -
         name: Checkout 
         uses: actions/checkout@v2
@@ -32,7 +38,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ./Dockerfile
           push: true
-          tags: sc4n1a471/car-thingy_go:dev
+          tags: |
+            sc4n1a471/car-thingy_go:${{ env.VERSION }}
+            sc4n1a471/car-thingy_go:latest
 
   redeploy:
     name: Redeploying on development server
