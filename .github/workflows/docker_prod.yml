@@ -63,7 +63,7 @@ jobs:
   redeploy:
     name: Redeploying on production server
     runs-on: ubuntu-latest
-    needs: [docker]
+    needs: [docker, db]
     env:  
       VERSION: "latest"
     steps:
