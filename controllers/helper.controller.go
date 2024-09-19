@@ -41,6 +41,7 @@ func SetupDatabase() error {
 		&models.QueryInspection{},
 		&models.Mileage{},
 		&models.Restriction{},
+		&models.AuthKey{},
 	)
 	if err != nil {
 		fmt.Print(err.Error())
@@ -104,8 +105,8 @@ func SendError(error string, ctx *gin.Context) {
 
 func SendData(message interface{}, ctx *gin.Context) {
 	response := map[string]interface{}{
-		"status":  "success",
-		"message": message,
+		"status": "success",
+		"data":   message,
 	}
 
 	ctx.IndentedJSON(http.StatusOK, response)

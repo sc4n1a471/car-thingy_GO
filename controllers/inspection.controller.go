@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,15 @@ import (
 
 // MARK: Normal inspections
 func GetInspections(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var inspections []models.Inspection
 	licensePlate := ctx.Param("license-plate")
 
@@ -23,6 +33,15 @@ func GetInspections(ctx *gin.Context) {
 
 // Returns all inspections for a given license plate
 func GetInspectionsHelper(ctx *gin.Context, licensePlate string) []models.Inspection {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return nil
+	}
+
 	var inspections []models.Inspection
 
 	result := DB.Find(&inspections, "car_id = ?", licensePlate)
@@ -41,6 +60,15 @@ func GetInspectionsHelper(ctx *gin.Context, licensePlate string) []models.Inspec
 }
 
 func CreateInspections(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var newInspections []models.Inspection
 
 	if err := ctx.BindJSON(&newInspections); err != nil {
@@ -63,6 +91,15 @@ func CreateInspections(ctx *gin.Context) {
 }
 
 func CreateInspectionHelper(ctx *gin.Context, newInspections []models.Inspection, tx *gorm.DB) bool {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return false
+	}
+
 	for _, newInspection := range newInspections {
 		checkResult := tx.Where("name = ?", newInspection.Name).Find(&newInspection)
 		if checkResult.RowsAffected != 0 {
@@ -82,6 +119,15 @@ func CreateInspectionHelper(ctx *gin.Context, newInspections []models.Inspection
 // MARK: Query inspections
 
 func GetQueryInspections(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var inspections []models.QueryInspection
 	licensePlate := ctx.Param("license-plate")
 
@@ -95,6 +141,15 @@ func GetQueryInspections(ctx *gin.Context) {
 
 // Returns all inspections for a given license plate
 func GetQueryInspectionsHelper(ctx *gin.Context, licensePlate string) []models.QueryInspection {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return nil
+	}
+
 	var inspections []models.QueryInspection
 
 	result := DB.Find(&inspections, "car_id = ?", licensePlate)
@@ -113,6 +168,15 @@ func GetQueryInspectionsHelper(ctx *gin.Context, licensePlate string) []models.Q
 }
 
 func CreateQueryInspections(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var newInspections []models.QueryInspection
 
 	if err := ctx.BindJSON(&newInspections); err != nil {
@@ -135,6 +199,15 @@ func CreateQueryInspections(ctx *gin.Context) {
 }
 
 func CreateQueryInspectionHelper(ctx *gin.Context, newInspections []models.QueryInspection, tx *gorm.DB) bool {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return false
+	}
+
 	for _, newInspection := range newInspections {
 		checkResult := tx.Where("name = ?", newInspection.Name).First(&newInspection)
 		if checkResult.RowsAffected != 0 {
@@ -152,6 +225,15 @@ func CreateQueryInspectionHelper(ctx *gin.Context, newInspections []models.Query
 }
 
 func DeleteQueryInspections(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	licensePlate := ctx.Param("license-plate")
 
 	success := DeleteQueryInspectionsHelper(ctx, licensePlate, false)
@@ -164,6 +246,15 @@ func DeleteQueryInspections(ctx *gin.Context) {
 }
 
 func DeleteQueryInspectionsHelper(ctx *gin.Context, licensePlate string, imagesOnly bool) bool {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return false
+	}
+
 	var inspections []models.QueryInspection
 
 	if imagesOnly {

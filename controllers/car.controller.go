@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +11,15 @@ import (
 func GetCar(ctx *gin.Context) {
 	var car models.Car
 	var returnData []models.Car
+
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
 
 	car.ID = ctx.Param("license-plate")
 	result := DB.Preload("Accidents").Preload("Mileage").Preload("Restrictions").First(&car)
@@ -26,6 +36,15 @@ func GetCar(ctx *gin.Context) {
 
 // MARK: GetCars
 func GetCars(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var returnCars []models.Car
 
 	result := DB.Find(&returnCars)
@@ -119,6 +138,15 @@ func GetCars(ctx *gin.Context) {
 
 // MARK: CreateCar
 func CreateCar(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var newCar models.Car
 	var newAccidents []models.Accident
 	var newRestrictions []models.Restriction
@@ -267,6 +295,15 @@ newsLoop:
 
 // MARK: UpdateCar
 func UpdateCar(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var updatedCar models.Car
 
 	if err := ctx.BindJSON(&updatedCar); err != nil {
@@ -291,6 +328,15 @@ func UpdateCar(ctx *gin.Context) {
 
 // MARK: DeleteCar
 func DeleteCar(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var deletableLicensePlate models.Car
 
 	deletableLicensePlate.ID = ctx.Param("license-plate")
@@ -314,6 +360,15 @@ func DeleteCar(ctx *gin.Context) {
 
 // MARK: CreateLicensePlate
 func CreateLicensePlate(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var newCar models.Car
 
 	if err := ctx.BindJSON(&newCar); err != nil {
@@ -340,6 +395,15 @@ func CreateLicensePlate(ctx *gin.Context) {
 
 // MARK: UpdateLicensePlate
 func UpdateLicensePLate(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
 	var updatedCar models.Car
 
 	if err := ctx.BindJSON(&updatedCar); err != nil {
