@@ -33,6 +33,7 @@ func Api() {
 
 	// router.GET("/coordinates", controllers.GetCoordinates)
 
+	router.GET("/auth", controllers.CheckAuthKey)
 	router.POST("/auth", controllers.CreateAuthKeyWrapper)
 	router.DELETE("/auth", controllers.DeleteAuthKey)
 

@@ -10,6 +10,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func CheckAuthKey(ctx *gin.Context) {
+	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	if error != nil || !isAccessGranted {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+	ctx.IndentedJSON(http.StatusOK, models.Response{
+		Status:  "success",
+		Message: "Access granted!",
+	})
+}
+
 // MARK: GetAuthenticatedClient
 func GetAuthenticatedClient(r *http.Request) (bool, error) {
 	var authKey models.AuthKey
