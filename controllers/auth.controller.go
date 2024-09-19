@@ -31,6 +31,10 @@ func GetAuthenticatedClient(r *http.Request) (bool, error) {
 	authKey.ID = r.Header.Get("x-api-key")
 	authKey.IsActive = true
 
+	if authKey.ID == "" {
+		return false, nil
+	}
+
 	result := DB.First(&authKey)
 	if result.Error != nil {
 		return false, result.Error
