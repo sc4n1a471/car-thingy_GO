@@ -1,0 +1,16 @@
+components:
+  schema:
+    Mileage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        mileage:
+          type: number
+        date:
+          type: string
+          format: date-time
+          

@@ -1,0 +1,408 @@
+openapi: 3.0.3
+info:
+  title: car-thingy_GO
+  version: 2.2.0
+paths:
+  /auth:
+    get:
+      summary: Authenticate using an API key
+      operationId: authenticate
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    post:
+      summary: Create a new API key
+      operationId: authenticate
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '400':
+          description: Request failed
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    delete:
+      summary: Delete an API key
+      operationId: authenticate
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+  
+  /cars/{licensePlate}:
+    get:
+      summary: Get the requested car details
+      operationId: getCar
+      parameters:
+        - name: licensePlate
+          in: path
+          description: Requested license plate
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    $ref: './models/openapi/car.yaml#/components/schemas/Car'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    delete:
+      summary: Delete the license plate and everything associated to it
+      parameters:
+        - name: licensePlate
+          in: path
+          description: Deletable license plate
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+
+  /cars:
+    get:
+      summary: Get a list of cars
+      operationId: getCars
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: './models/openapi/car.yaml#/components/schemas/Car'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    post:
+      summary: Create a new car
+      operationId: createCar
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi/car.yaml#/components/schemas/Car'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '400':
+          description: Request failed
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    put:
+      summary: Update a car
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi/car.yaml#/components/schemas/Car'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '400':
+          description: Request failed
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+
+  /license-plate:
+    post:
+      summary: Create a new license plate, optionally a car, too
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi/car.yaml#/components/schemas/Car'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '400':
+          description: Request failed
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    
+  /license-plate/{licensePlate}:
+    put:
+      summary: Update a license plate
+      parameters:
+        - name: licensePlate
+          in: path
+          description: Updatable license plate
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi/car.yaml#/components/schemas/Car'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '400':
+          description: Request failed
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+
+  /inspections/{licensePlate}:
+    get:
+      summary: Get a list of inspections associated to the car
+      operationId: getCars
+      parameters:
+        - name: licensePlate
+          in: path
+          description: Inspections for this license plate
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: './models/openapi/inspection.yaml#/components/schema/Inspection'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+
+  /query-inspections/{licensePlate}:
+    get:
+      summary: Get a list of inspections associated to the car (used at a websocket query)
+      parameters:
+        - name: licensePlate
+          in: path
+          description: Query inspections for this license plate
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: './models/openapi/inspection.yaml#/components/schema/QueryInspection'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    delete:
+      summary: Delete all of the inspections associated to the car (used at a websocket query)
+      parameters:
+        - name: licensePlate
+          in: path
+          description: Delete query inspections for this license plate
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+    
+
+  /inspections:
+    post:
+      summary: Create a new query inspection (used by websocket server)
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './models/openapi/inspection.yaml#/components/schema/QueryInspection'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+        '400':
+          description: Request failed
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'               
