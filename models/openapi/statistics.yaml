@@ -1,0 +1,33 @@
+components:
+  schema:
+    Statistics:
+      type: object
+      properties:
+        carCount:
+          type: integer
+        knownCars:
+          type: integer
+        unknownCars:
+          type: integer
+        brandStats:
+          type: array
+          items:
+            $ref: '#/components/schema/BrandStatistics'
+    BrandStatistics:
+      type: object
+      properties:
+        brand:
+          type: string
+        count:
+          type: integer
+        models:
+          type: array
+          items:
+            $ref: '#/components/schema/ModelStatistics'
+    ModelStatistics:
+      type: object
+      properties:
+        model:
+          type: string
+        count:
+          type: integer

@@ -1,0 +1,72 @@
+components:
+  schemas:
+    Car:
+      type: object
+      properties:
+        licensePlate:
+          type: string
+          format: uuid
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        brand:
+          type: string
+        color:
+          type: string
+        engineSize:
+          type: number
+        firstReg:
+          type: string
+          format: date-time
+        firstRegHun:
+          type: string
+          format: date-time
+        fuelType:
+          type: string
+        gearbox:
+          type: string
+        model:
+          type: string
+        numOfOwners:
+          type: number
+        performance:
+          type: number
+        status:
+          type: string
+        typeCode:
+          type: string
+        year:
+          type: number
+        latitude:
+          type: number
+        longitude:
+          type: number
+        
+        accidents:
+          type: array
+          items:
+            $ref: './accident.yaml#/components/schema/Accident'
+
+        inspections:
+          type: array
+          items:
+            $ref: './inspection.yaml#/components/schema/Inspection'
+
+        mileage:
+          type: array
+          items:
+            $ref: './mileage.yaml#/components/schema/Mileage'
+        
+        restrictions:
+          type: array
+          items: 
+            $ref: './restriction.yaml#/components/schema/Restriction'
+      required:
+        - id
+        - createdAt
+        - updatedAt

@@ -1,0 +1,35 @@
+components:
+  schema:
+    Inspection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        imageLocation:
+          type: string
+        name:
+          type: string
+        base64:
+          type: array
+          items:
+            type: string
+    QueryInspection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        imageLocation:
+          type: string
+        name:
+          type: string
+        base64:
+          type: array
+          items:
+            type: string
+          

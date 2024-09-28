@@ -37,6 +37,8 @@ func Api() {
 	router.POST("/auth", controllers.CreateAuthKeyWrapper)
 	router.DELETE("/auth", controllers.DeleteAuthKey)
 
+	router.GET("/statistics", controllers.GetStatistics)
+
 	//router.Run("localhost:3000")
 	http.ListenAndServe(":3000", router)
 }
