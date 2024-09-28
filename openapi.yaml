@@ -26,6 +26,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - auth
     post:
       summary: Create a new API key
       operationId: authenticate
@@ -42,6 +44,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - auth
     delete:
       summary: Delete an API key
       operationId: authenticate
@@ -64,6 +68,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - auth
   
   /cars/{licensePlate}:
     get:
@@ -99,6 +105,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - cars
     delete:
       summary: Delete the license plate and everything associated to it
       parameters:
@@ -126,6 +134,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - cars
 
   /cars:
     get:
@@ -157,6 +167,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - cars
     post:
       summary: Create a new car
       operationId: createCar
@@ -185,6 +197,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - cars
     put:
       summary: Update a car
       parameters:
@@ -212,7 +226,9 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
-
+      tags:
+        - cars
+  
   /license-plate:
     post:
       summary: Create a new license plate, optionally a car, too
@@ -241,7 +257,9 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
-    
+      tags:
+        - license-plate
+  
   /license-plate/{licensePlate}:
     put:
       summary: Update a license plate
@@ -276,6 +294,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - license-plate
 
   /inspections/{licensePlate}:
     get:
@@ -313,7 +333,9 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
-
+      tags:
+        - inspections
+  
   /query-inspections/{licensePlate}:
     get:
       summary: Get a list of inspections associated to the car (used at a websocket query)
@@ -349,6 +371,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - query-inspections
     delete:
       summary: Delete all of the inspections associated to the car (used at a websocket query)
       parameters:
@@ -376,7 +400,8 @@ paths:
             application/json:
               schema:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
-    
+      tags:
+        - query-inspections
 
   /inspections:
     post:
@@ -405,4 +430,36 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'               
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'     
+      tags:
+        - inspections       
+  /statistics:
+    get:
+      summary: Get statistics
+      operationId: getStatistics
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    $ref: './models/openapi/statistics.yaml#/components/schema/Statistics'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
+      tags:
+        - statistics   
