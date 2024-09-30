@@ -57,7 +57,7 @@ func GetStatistics(ctx *gin.Context) {
 
 	var brandStats []models.BrandStatistics
 	// Get brand statistics
-	rows, err := DB.Table("cars").Select("brand, COUNT(*) as count").Group("brand").Rows()
+	rows, err := DB.Table("cars").Select("brand, COUNT(*) as count").Group("brand").Where("brand is not NULL").Rows()
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, models.Response{
 			Status:  "fail",
