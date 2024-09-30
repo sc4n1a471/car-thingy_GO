@@ -4,7 +4,7 @@ type Statistics struct {
 	CarCount    int               `json:"carCount"`
 	KnownCars   int               `json:"knownCars"`
 	UnknownCars int               `json:"unknownCars"`
-	BrandStats  []BrandStatistics `json:"brandstats"`
+	BrandStats  []BrandStatistics `json:"brandStats"`
 }
 
 type BrandStatistics struct {
