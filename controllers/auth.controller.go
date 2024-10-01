@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -44,6 +45,24 @@ func GetAuthenticatedClient(r *http.Request) (bool, error) {
 
 // MARK: CreateAuthKeyWrapper
 func CreateAuthKeyWrapper(ctx *gin.Context) {
+	if ctx.Request.Header.Get("x-api-key") != os.Getenv("API_SECRET") {
+		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
+			Status:  "fail",
+			Message: "Access denied!",
+		})
+		return
+	}
+
+	var validAuthKey models.AuthKey
+	result := DB.Select(&validAuthKey).Where("is_valid = ?", true)
+	if result.Error != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, models.Response{
+			Status:  "fail",
+			Message: "Can't create multiple active API keys",
+		})
+		return
+	}
+
 	generatedKey, error := createAuthKey()
 	if error != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, models.Response{
