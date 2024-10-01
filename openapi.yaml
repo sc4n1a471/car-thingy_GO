@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: car-thingy_GO
-  version: 2.2.0
+  version: 2.2.1
 paths:
   /auth:
     get:
@@ -31,6 +31,13 @@ paths:
     post:
       summary: Create a new API key
       operationId: authenticate
+      parameters:
+        - in: header
+          description: API_SECRET to authenticate, only 1 active API key is allowed
+          name: x-api-key
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: OK
