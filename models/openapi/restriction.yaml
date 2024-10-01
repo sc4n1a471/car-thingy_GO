@@ -1,0 +1,15 @@
+components:
+  schema:
+    Restriction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        restriction:
+          type: string
+        isActive:
+          type: boolean
+          

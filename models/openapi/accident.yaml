@@ -1,0 +1,16 @@
+components:
+  schema:
+    Accident:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        licensePlate:
+          type: string
+        accidentDate:
+          type: string
+          format: date-time
+        role:
+          type: string
+          
