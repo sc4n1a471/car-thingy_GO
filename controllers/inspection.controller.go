@@ -255,7 +255,18 @@ func DeleteQueryInspectionsHelper(ctx *gin.Context, licensePlate string, imagesO
 		return false
 	}
 
+	isQuerySaved := ctx.Query("isQuerySaved")
+
 	var inspections []models.QueryInspection
+
+	if isQuerySaved == "true" {
+		result := DB.Where("car_id = ?", licensePlate).Delete(&inspections)
+		if result.Error != nil {
+			SendError(result.Error.Error(), ctx)
+			return false
+		}
+		return true
+	}
 
 	if imagesOnly {
 		for _, inspection := range inspections {
@@ -265,25 +276,26 @@ func DeleteQueryInspectionsHelper(ctx *gin.Context, licensePlate string, imagesO
 				return false
 			}
 		}
-	} else {
-		result := DB.Find(&inspections, "car_id = ?", licensePlate)
-		if result.RowsAffected == 0 {
-			return true
-		}
+		return true
+	}
 
-		for _, inspection := range inspections {
-			errorResult := os.RemoveAll(inspection.ImageLocation)
-			if errorResult != nil {
-				SendError(errorResult.Error(), ctx)
-				return false
-			}
-		}
+	result := DB.Find(&inspections, "car_id = ?", licensePlate)
+	if result.RowsAffected == 0 {
+		return true
+	}
 
-		result = DB.Where("car_id = ?", licensePlate).Delete(&inspections)
-		if result.RowsAffected == 0 {
-			SendError(result.Error.Error(), ctx)
+	for _, inspection := range inspections {
+		errorResult := os.RemoveAll(inspection.ImageLocation)
+		if errorResult != nil {
+			SendError(errorResult.Error(), ctx)
 			return false
 		}
+	}
+
+	result = DB.Where("car_id = ?", licensePlate).Delete(&inspections)
+	if result.Error != nil {
+		SendError(result.Error.Error(), ctx)
+		return false
 	}
 	return true
 }

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: car-thingy_GO
-  version: 2.2.1
+  version: 2.2.2
 paths:
   /auth:
     get:
@@ -387,6 +387,14 @@ paths:
           in: path
           description: Delete query inspections for this license plate
           required: true
+          schema:
+            type: string
+        - in: query
+          name: isQuerySaved
+          required: true
+          description: If the query is saved, the images are not deleted.
+            If not, the images are deleted. 
+            Both cases the records are deleted from query_inspection table.
           schema:
             type: string
         - in: header
