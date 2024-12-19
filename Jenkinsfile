@@ -50,7 +50,7 @@ pipeline {
                     buildNumber = env.BUILD_NUMBER
                     echo "Build number: ${buildNumber}"
 
-                    branchName = env.BRANCH_NAME
+                    branchName = env.BRANCH_NAME.split('-')[0]
                     echo "Build branch: ${branchName}"
                 }
             }
