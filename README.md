@@ -1,8 +1,47 @@
 # car-thingy_GO
-[![Build, Publish, Redeploy Development](https://github.com/sc4n1a471/car-thingy_GO/actions/workflows/docker_dev.yml/badge.svg?branch=dev)](https://github.com/sc4n1a471/car-thingy_GO/actions/workflows/docker_dev.yml)
-[![Build, Publish, Redeploy Development](https://github.com/sc4n1a471/car-thingy_GO/actions/workflows/docker_dev.yml/badge.svg?branch=dev)](https://github.com/sc4n1a471/car-thingy_GO/actions/workflows/docker_dev.yml)
-![Alt](https://repobeats.axiom.co/api/embed/2692ab72c49f92569a121d87d1029543c2f7a01d.svg "Repobeats analytics image")
 
 Ez lenni repository for car-thingy_GO
 
-Egyszerű Go-ban írt API adatbáziskezeléssel a többi car-thingy rendszerhez
+This backend appliation is part of the car-thingy system. This app is written in GO, acts as the REST API for CRUD operations for every model.
+
+## Setup
+- Have an operational MySQL database
+
+### Terraform
+- Run the following commands
+```terraform
+terraform init
+
+terraform apply \
+    -var="container_name=car-thingy_go" \
+    -var="container_version=latest" \
+    -var="env=prod" \
+    -var="db_username=<db username>" \
+    -var="db_password=<db passwd>" \
+    -var="db_ip=<db ip>" \
+    -var="db_port=<db port>" \
+    -var="db_name=<db name>" \
+    -var="api_secret=<random secret>" \
+    -auto-approve
+```
+
+### Docker only
+- Run the following command
+```sh
+docker run --mount source=downloaded_images,target=/app/downloaded_images \
+    -e "DB_IP=<db ip>" \
+    -e "DB_USERNAME=<db username>" \
+    -e "DB_PASSWORD=<db passwd>" \
+    -e "DB_PORT=<db port>" \
+    -e "DB_NAME=<db name>" \
+    -e "API_SECRET=<random secret>"
+    -p <exposed port>:3000 \
+    --restart unless-stopped \
+    --name=car-thingy_GO \
+    sc4n1a471/car-thingy_go:latest
+```
+
+## Usage
+- First, you need to generate an API key by calling the `POST /auth` endpoint with your secret as `x-api-key` header (only 1 active API key is allowed)
+- You will need to use this key for every operation, also need to pass it to car-thingy_Python
+- You can find the endpoints of the API in `openapi.yaml`
