@@ -3,6 +3,7 @@ package controllers
 import (
 	"Go_Thingy_GO/models"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -60,29 +61,6 @@ func GetCars(ctx *gin.Context) {
 			// Required because of the chart in SwiftUI
 		}
 	}
-
-	// for _, licensePlate := range allLicensePlates {
-	// 	var car models.CarResult
-	// 	var coordinates models.Coordinate
-
-	// 	car.LicensePlate = licensePlate
-
-	// 	car.Specs = GetSpecs(ctx, licensePlate.LicensePlate, true)
-
-	// 	// car.Accidents = []models.Accident{}
-	// 	// car.Restrictions = []models.Restriction{}
-	// 	car.Mileage = []models.Mileage{}
-	// 	// car.Inspections = []models.InspectionResult{}
-
-	// 	result := DB.Find(&coordinates, "car_id = ?", licensePlate.LicensePlate)
-	// 	if result.Error != nil {
-	// 		SendError(result.Error.Error(), ctx)
-	// 		return
-	// 	}
-	// 	car.Coordinates = coordinates
-
-	// 	returnCars = append(returnCars, car)
-	// }
 
 	if returnCars == nil {
 		returnCars = []models.Car{}
@@ -157,6 +135,8 @@ func CreateCar(ctx *gin.Context) {
 		SendError(err.Error(), ctx)
 		return
 	}
+
+	newCar.ID = strings.ReplaceAll(newCar.ID, " ", "")
 
 	if newCar.Accidents != nil {
 		newAccidents = *newCar.Accidents
@@ -311,6 +291,8 @@ func UpdateCar(ctx *gin.Context) {
 		return
 	}
 
+	updatedCar.ID = strings.ReplaceAll(updatedCar.ID, " ", "")
+
 	tx := DB.Begin()
 
 	result := tx.Save(&updatedCar)
@@ -376,6 +358,8 @@ func CreateLicensePlate(ctx *gin.Context) {
 		return
 	}
 
+	newCar.ID = strings.ReplaceAll(newCar.ID, " ", "")
+
 	tx := DB.Begin()
 	result := tx.First(&newCar)
 	if result.RowsAffected == 0 {
@@ -412,6 +396,9 @@ func UpdateLicensePLate(ctx *gin.Context) {
 	}
 
 	var oldLicensePlate = ctx.Param("license-plate")
+
+	updatedCar.ID = strings.ReplaceAll(updatedCar.ID, " ", "")
+	oldLicensePlate = strings.ReplaceAll(oldLicensePlate, " ", "")
 
 	tx := DB.Begin()
 
