@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -169,6 +170,19 @@ func CreateCar(ctx *gin.Context) {
 	}
 	if newCar.Inspections != nil {
 		newInspections = *newCar.Inspections
+	}
+
+	fmts := "Creating car: %+v\n"
+	fmt.Printf(fmts, newCar)
+	fmts = "With accidents: %+v\n"
+	fmt.Printf(fmts, newAccidents)
+	fmts = "With restrictions: %+v\n"
+	fmt.Printf(fmts, newRestrictions)
+	fmts = "With mileages: %+v\n"
+	fmt.Printf(fmts, newMileages)
+	fmt.Printf("With inspections: %d items\n", len(newInspections))
+	for _, insp := range newInspections {
+		fmt.Printf(" - Inspection at %s\n", insp.Name)
 	}
 
 	tx := DB.Begin()
