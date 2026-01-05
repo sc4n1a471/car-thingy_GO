@@ -28,7 +28,7 @@ func GetCar(ctx *gin.Context) {
 		SendError(result.Error.Error(), ctx)
 		return
 	}
-	var inspections = GetInspectionsHelper(ctx, car.ID)
+	var inspections = GetInspections(ctx, car.ID)
 	car.Inspections = &inspections
 
 	returnData = append(returnData, car)
@@ -408,7 +408,7 @@ func CreateLicensePlate(ctx *gin.Context) {
 }
 
 // MARK: UpdateLicensePlate
-func UpdateLicensePLate(ctx *gin.Context) {
+func UpdateLicensePlate(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{

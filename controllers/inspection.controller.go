@@ -11,7 +11,7 @@ import (
 )
 
 // MARK: Normal inspections
-func GetInspections(ctx *gin.Context) {
+func GetInspectionsHelper(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
@@ -24,7 +24,7 @@ func GetInspections(ctx *gin.Context) {
 	var inspections []models.Inspection
 	licensePlate := ctx.Param("license-plate")
 
-	inspections = GetInspectionsHelper(ctx, licensePlate)
+	inspections = GetInspections(ctx, licensePlate)
 	if inspections == nil {
 		return
 	}
@@ -33,7 +33,7 @@ func GetInspections(ctx *gin.Context) {
 }
 
 // Returns all inspections for a given license plate
-func GetInspectionsHelper(ctx *gin.Context, licensePlate string) []models.Inspection {
+func GetInspections(ctx *gin.Context, licensePlate string) []models.Inspection {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
@@ -119,7 +119,7 @@ func CreateInspectionHelper(ctx *gin.Context, newInspections []models.Inspection
 
 // MARK: Query inspections
 
-func GetQueryInspections(ctx *gin.Context) {
+func GetQueryInspectionsHelper(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
@@ -132,7 +132,7 @@ func GetQueryInspections(ctx *gin.Context) {
 	var inspections []models.QueryInspection
 	licensePlate := ctx.Param("license-plate")
 
-	inspections = GetQueryInspectionsHelper(ctx, licensePlate)
+	inspections = GetQueryInspections(ctx, licensePlate)
 	if inspections == nil {
 		return
 	}
@@ -141,7 +141,7 @@ func GetQueryInspections(ctx *gin.Context) {
 }
 
 // Returns all inspections for a given license plate
-func GetQueryInspectionsHelper(ctx *gin.Context, licensePlate string) []models.QueryInspection {
+func GetQueryInspections(ctx *gin.Context, licensePlate string) []models.QueryInspection {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
@@ -168,7 +168,7 @@ func GetQueryInspectionsHelper(ctx *gin.Context, licensePlate string) []models.Q
 	return inspections
 }
 
-func CreateQueryInspections(ctx *gin.Context) {
+func CreateQueryInspectionsHelper(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
@@ -187,7 +187,7 @@ func CreateQueryInspections(ctx *gin.Context) {
 
 	tx := DB.Begin()
 
-	successful := CreateQueryInspectionHelper(ctx, newInspections, tx)
+	successful := CreateQueryInspection(ctx, newInspections, tx)
 
 	if !successful {
 		return
@@ -196,10 +196,9 @@ func CreateQueryInspections(ctx *gin.Context) {
 	tx.Commit()
 
 	SendData("Inspections were uploaded successfully", ctx)
-	return
 }
 
-func CreateQueryInspectionHelper(ctx *gin.Context, newInspections []models.QueryInspection, tx *gorm.DB) bool {
+func CreateQueryInspection(ctx *gin.Context, newInspections []models.QueryInspection, tx *gorm.DB) bool {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
@@ -208,8 +207,12 @@ func CreateQueryInspectionHelper(ctx *gin.Context, newInspections []models.Query
 		})
 		return false
 	}
+	fmt.Println("Creating ", len(newInspections), " query inspections")
+
+	var successfulCreations int = 0
 
 	for _, newInspection := range newInspections {
+		fmt.Println("Creating query inspection: ", newInspection.Name)
 		checkResult := tx.Where("name = ?", newInspection.Name).First(&newInspection)
 		if checkResult.RowsAffected != 0 {
 			continue
@@ -221,7 +224,9 @@ func CreateQueryInspectionHelper(ctx *gin.Context, newInspections []models.Query
 			SendError(result.Error.Error(), ctx)
 			return false
 		}
+		successfulCreations += 1
 	}
+	fmt.Println("Successfully created ", successfulCreations, " query inspections")
 	return true
 }
 

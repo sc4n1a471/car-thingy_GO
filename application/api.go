@@ -24,11 +24,11 @@ func Api() {
 	router.DELETE("/cars/:license-plate", controllers.DeleteCar)
 
 	router.POST("/license-plate", controllers.CreateLicensePlate)
-	router.PUT("/license-plate/:license-plate", controllers.UpdateLicensePLate)
+	router.PUT("/license-plate/:license-plate", controllers.UpdateLicensePlate)
 
-	router.GET("/inspections/:license-plate", controllers.GetInspections)
-	router.GET("/query-inspections/:license-plate", controllers.GetQueryInspections)
-	router.POST("/inspections", controllers.CreateQueryInspections)
+	router.GET("/inspections/:license-plate", controllers.GetInspectionsHelper)
+	router.GET("/query-inspections/:license-plate", controllers.GetQueryInspectionsHelper)
+	router.POST("/inspections", controllers.CreateQueryInspectionsHelper)
 
 	// router.GET("/coordinates", controllers.GetCoordinates)
 
