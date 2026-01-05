@@ -97,6 +97,7 @@ func ConvertImagesToBase64(imageLocation string) []string {
 }
 
 func SendError(error string, ctx *gin.Context) {
+	fmt.Println("Error: ", error)
 	ctx.IndentedJSON(http.StatusConflict, models.Response{
 		Status:  "fail",
 		Message: error,
@@ -108,6 +109,7 @@ func SendData(message interface{}, ctx *gin.Context) {
 		"status": "success",
 		"data":   message,
 	}
+	fmt.Println("Response: ", response)
 
 	ctx.IndentedJSON(http.StatusOK, response)
 }

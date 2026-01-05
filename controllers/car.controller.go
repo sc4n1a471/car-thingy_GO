@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,7 +29,7 @@ func GetCar(ctx *gin.Context) {
 		SendError(result.Error.Error(), ctx)
 		return
 	}
-	var inspections = GetInspectionsHelper(ctx, car.ID)
+	var inspections = GetInspections(ctx, car.ID)
 	car.Inspections = &inspections
 
 	returnData = append(returnData, car)
@@ -149,6 +150,19 @@ func CreateCar(ctx *gin.Context) {
 	}
 	if newCar.Inspections != nil {
 		newInspections = *newCar.Inspections
+	}
+
+	fmts := "Creating car: %+v\n"
+	fmt.Printf(fmts, newCar)
+	fmts = "With accidents: %+v\n"
+	fmt.Printf(fmts, newAccidents)
+	fmts = "With restrictions: %+v\n"
+	fmt.Printf(fmts, newRestrictions)
+	fmts = "With mileages: %+v\n"
+	fmt.Printf(fmts, newMileages)
+	fmt.Printf("With inspections: %d items\n", len(newInspections))
+	for _, insp := range newInspections {
+		fmt.Printf(" - Inspection at %s\n", insp.Name)
 	}
 
 	tx := DB.Begin()
@@ -323,7 +337,7 @@ func DeleteCar(ctx *gin.Context) {
 
 	deletableLicensePlate.ID = ctx.Param("license-plate")
 
-	success := DeleteQueryInspectionsHelper(ctx, deletableLicensePlate.ID, true)
+	success := DeleteQueryInspections(ctx, deletableLicensePlate.ID, true)
 
 	if !success {
 		SendData("Inspections were not deleted successfully", ctx)
@@ -378,7 +392,7 @@ func CreateLicensePlate(ctx *gin.Context) {
 }
 
 // MARK: UpdateLicensePlate
-func UpdateLicensePLate(ctx *gin.Context) {
+func UpdateLicensePlate(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
