@@ -102,7 +102,7 @@ func CreateInspectionHelper(ctx *gin.Context, newInspections []models.Inspection
 	}
 
 	for _, newInspection := range newInspections {
-		checkResult := tx.Where("name = ?", newInspection.Name).Find(&newInspection)
+		checkResult := tx.Where("name = ? and car_id = ?", newInspection.Name, newInspection.CarID).Find(&newInspection)
 		if checkResult.RowsAffected != 0 {
 			continue
 		}
@@ -213,8 +213,9 @@ func CreateQueryInspection(ctx *gin.Context, newInspections []models.QueryInspec
 
 	for _, newInspection := range newInspections {
 		fmt.Println("Creating query inspection: ", newInspection.Name)
-		checkResult := tx.Where("name = ?", newInspection.Name).First(&newInspection)
+		checkResult := tx.Where("name = ? and car_id = ?", newInspection.Name, newInspection.CarID).First(&newInspection)
 		if checkResult.RowsAffected != 0 {
+			fmt.Println("Query inspection already exists: ", newInspection.Name, " for car ", newInspection.CarID)
 			continue
 		}
 
