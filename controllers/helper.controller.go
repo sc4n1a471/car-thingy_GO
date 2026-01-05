@@ -109,7 +109,6 @@ func SendData(message interface{}, ctx *gin.Context) {
 		"status": "success",
 		"data":   message,
 	}
-	fmt.Println("Response: ", response)
 
 	ctx.IndentedJSON(http.StatusOK, response)
 }
