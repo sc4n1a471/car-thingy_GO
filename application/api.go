@@ -29,7 +29,6 @@ func Api() {
 	router.GET("/inspections/:license-plate", controllers.GetInspections)
 	router.GET("/query-inspections/:license-plate", controllers.GetQueryInspections)
 	router.POST("/inspections", controllers.CreateQueryInspections)
-	router.DELETE("/query-inspections/:license-plate", controllers.DeleteQueryInspections)
 
 	// router.GET("/coordinates", controllers.GetCoordinates)
 
