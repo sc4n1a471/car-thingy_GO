@@ -305,6 +305,12 @@ func UpdateCar(ctx *gin.Context) {
 		return
 	}
 
+	// Only license plate and comment can be updated here
+	updatedCar.Inspections = nil
+	updatedCar.Mileage = nil
+	updatedCar.Accidents = nil
+	updatedCar.Restrictions = nil
+
 	updatedCar.ID = strings.ReplaceAll(updatedCar.ID, " ", "")
 
 	tx := DB.Begin()
