@@ -355,7 +355,7 @@ func DeleteCar(ctx *gin.Context) {
 
 	deletableLicensePlate.ID = ctx.Param("license-plate")
 
-	success := DeleteQueryInspectionsHelper(ctx, deletableLicensePlate.ID, true)
+	success := DeleteQueryInspections(ctx, deletableLicensePlate.ID, true)
 
 	if !success {
 		SendData("Inspections were not deleted successfully", ctx)
