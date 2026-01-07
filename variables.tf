@@ -49,3 +49,8 @@ variable "api_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "graylog_host" {
+  description = "The Graylog host with ip and port: <ip>:<port>"
+  type        = string
+}

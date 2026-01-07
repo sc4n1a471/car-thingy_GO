@@ -2,22 +2,18 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
-	"fmt"
-	"net/http"
-	"os"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"log/slog"
+	"net/http"
+	"os"
 )
 
 // MARK: Normal inspections
 func GetInspectionsHelper(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for getting inspections", http.StatusUnauthorized, ctx)
 		return
 	}
 
@@ -36,10 +32,7 @@ func GetInspectionsHelper(ctx *gin.Context) {
 func GetInspections(ctx *gin.Context, licensePlate string) []models.Inspection {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for getting inspections", http.StatusUnauthorized, ctx)
 		return nil
 	}
 
@@ -47,7 +40,7 @@ func GetInspections(ctx *gin.Context, licensePlate string) []models.Inspection {
 
 	result := DB.Find(&inspections, "car_id = ?", licensePlate)
 	if result.Error != nil {
-		SendError(result.Error.Error(), ctx)
+		SendError("Could not find inspections: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return nil
 	} else if result.RowsAffected == 0 {
 		return []models.Inspection{}
@@ -63,17 +56,14 @@ func GetInspections(ctx *gin.Context, licensePlate string) []models.Inspection {
 func CreateInspections(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for creating inspections", http.StatusUnauthorized, ctx)
 		return
 	}
 
 	var newInspections []models.Inspection
 
 	if err := ctx.BindJSON(&newInspections); err != nil {
-		SendError(err.Error(), ctx)
+		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 
@@ -94,10 +84,7 @@ func CreateInspections(ctx *gin.Context) {
 func CreateInspectionHelper(ctx *gin.Context, newInspections []models.Inspection, tx *gorm.DB) bool {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for creating inspections", http.StatusUnauthorized, ctx)
 		return false
 	}
 
@@ -110,7 +97,7 @@ func CreateInspectionHelper(ctx *gin.Context, newInspections []models.Inspection
 		result := tx.Create(&newInspection)
 		if result.Error != nil {
 			tx.Rollback()
-			SendError(result.Error.Error(), ctx)
+			SendError("Error creating new inspection: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 			return false
 		}
 	}
@@ -122,10 +109,7 @@ func CreateInspectionHelper(ctx *gin.Context, newInspections []models.Inspection
 func GetQueryInspectionsHelper(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for getting query inspections", http.StatusUnauthorized, ctx)
 		return
 	}
 
@@ -144,10 +128,7 @@ func GetQueryInspectionsHelper(ctx *gin.Context) {
 func GetQueryInspections(ctx *gin.Context, licensePlate string) []models.QueryInspection {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for getting query inspections", http.StatusUnauthorized, ctx)
 		return nil
 	}
 
@@ -155,7 +136,7 @@ func GetQueryInspections(ctx *gin.Context, licensePlate string) []models.QueryIn
 
 	result := DB.Find(&inspections, "car_id = ?", licensePlate)
 	if result.Error != nil {
-		SendError(result.Error.Error(), ctx)
+		SendError("Could not find inspections: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return nil
 	} else if result.RowsAffected == 0 {
 		return []models.QueryInspection{}
@@ -171,17 +152,14 @@ func GetQueryInspections(ctx *gin.Context, licensePlate string) []models.QueryIn
 func CreateQueryInspectionsHelper(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for creating query inspections", http.StatusUnauthorized, ctx)
 		return
 	}
 
 	var newInspections []models.QueryInspection
 
 	if err := ctx.BindJSON(&newInspections); err != nil {
-		SendError(err.Error(), ctx)
+		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 
@@ -201,33 +179,30 @@ func CreateQueryInspectionsHelper(ctx *gin.Context) {
 func CreateQueryInspection(ctx *gin.Context, newInspections []models.QueryInspection, tx *gorm.DB) bool {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for creating query inspections", http.StatusUnauthorized, ctx)
 		return false
 	}
-	fmt.Println("Creating ", len(newInspections), " query inspections")
+	slog.Info("Creating ", len(newInspections), " query inspections")
 
 	var successfulCreations int = 0
 
 	for _, newInspection := range newInspections {
-		fmt.Println("Creating query inspection: ", newInspection.Name)
+		slog.Info("Creating query inspection: ", newInspection.Name)
 		checkResult := tx.Where("name = ? and car_id = ?", newInspection.Name, newInspection.CarID).First(&newInspection)
 		if checkResult.RowsAffected != 0 {
-			fmt.Println("Query inspection already exists: ", newInspection.Name, " for car ", newInspection.CarID)
+			slog.Info("Query inspection already exists: ", newInspection.Name, " for car ", newInspection.CarID)
 			continue
 		}
 
 		result := tx.Create(&newInspection)
 		if result.Error != nil {
 			tx.Rollback()
-			SendError(result.Error.Error(), ctx)
+			SendError("Could not create query inspection: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 			return false
 		}
 		successfulCreations += 1
 	}
-	fmt.Println("Successfully created ", successfulCreations, " query inspections")
+	slog.Info("Successfully created ", successfulCreations, " query inspections")
 	return true
 }
 
@@ -236,10 +211,7 @@ func CreateQueryInspection(ctx *gin.Context, newInspections []models.QueryInspec
 func DeleteQueryInspections(ctx *gin.Context, licensePlate string, imagesOnly bool) bool {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for deleting query inspections", http.StatusUnauthorized, ctx)
 		return false
 	}
 
@@ -253,14 +225,14 @@ func DeleteQueryInspections(ctx *gin.Context, licensePlate string, imagesOnly bo
 	for _, inspection := range inspections {
 		errorResult := os.RemoveAll(inspection.ImageLocation)
 		if errorResult != nil {
-			SendError(errorResult.Error(), ctx)
+			SendError("Could not delete inspection images: "+errorResult.Error(), http.StatusInternalServerError, ctx)
 			return false
 		}
 	}
 
 	result = DB.Where("car_id = ?", licensePlate).Delete(&inspections)
 	if result.Error != nil {
-		SendError(result.Error.Error(), ctx)
+		SendError("Could not delete query inspections: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return false
 	}
 	return true
@@ -269,7 +241,7 @@ func DeleteQueryInspections(ctx *gin.Context, licensePlate string, imagesOnly bo
 // Delete all older query inspections and their images that were not saved
 // MARK: Cleanup function
 func DeleteOldQueryInspections() bool {
-	fmt.Println("Deleting old queries...")
+	slog.Info("Deleting old queries...")
 	var inspections []models.QueryInspection
 	var deletedSuccessfully int64 = 0
 
@@ -278,36 +250,36 @@ func DeleteOldQueryInspections() bool {
 	var queryInspectionCarIds []string
 	result := DB.Table("query_inspections").Select("car_id").Where("car_id NOT IN (SELECT car_id FROM inspections GROUP BY car_id)").Group("car_id").Scan(&queryInspectionCarIds)
 	if result.Error != nil {
-		fmt.Println("Error fetching old query inspections: ", result.Error.Error())
+		slog.Error("Error fetching old query inspections: ", result.Error.Error())
 		return false
 	}
 
 	for _, id := range queryInspectionCarIds {
-		fmt.Println("To be deleted query: ", id)
+		slog.Info("To be deleted query: ", id)
 		result = DB.Find(&inspections, "car_id = ?", id)
 		if result.RowsAffected == 0 {
 			return true
 		}
 		if result.Error != nil {
-			fmt.Println("Error fetching old query inspections: ", result.Error.Error())
+			slog.Error("Error fetching old query inspections: ", result.Error.Error())
 			return false
 		}
 
 		for _, inspection := range inspections {
 			errorResult := os.RemoveAll(inspection.ImageLocation)
 			if errorResult != nil {
-				fmt.Println("Error deleting old query inspection images: ", errorResult.Error())
+				slog.Error("Error deleting old query inspection images: ", errorResult.Error())
 				return false
 			}
 		}
 
 		result = DB.Where("car_id = ?", id).Delete(&inspections)
 		if result.Error != nil {
-			fmt.Println("Error deleting old query inspections: ", result.Error.Error())
+			slog.Error("Error deleting old query inspections: ", result.Error.Error())
 			return false
 		}
 		deletedSuccessfully += 1
 	}
-	fmt.Println("Deleted ", deletedSuccessfully, " query inspections")
+	slog.Info("Deleted ", deletedSuccessfully, " query inspections")
 	return true
 }

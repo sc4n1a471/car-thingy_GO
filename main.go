@@ -3,6 +3,7 @@ package main
 import (
 	"Go_Thingy_GO/application"
 	"Go_Thingy_GO/controllers"
+	"log/slog"
 	"time"
 )
 
@@ -20,6 +21,7 @@ func scheduleDeleteOldQueryInspections() {
 }
 
 func main() {
+	slog.Info("Starting API...")
 	go scheduleDeleteOldQueryInspections()
 	application.Api()
 }

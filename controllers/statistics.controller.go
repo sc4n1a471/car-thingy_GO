@@ -10,10 +10,7 @@ import (
 func GetStatistics(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for getting statistics", http.StatusUnauthorized, ctx)
 		return
 	}
 
@@ -23,10 +20,7 @@ func GetStatistics(ctx *gin.Context) {
 	// Get total number of cars
 	result := DB.Table("cars").Count(&carCount)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, models.Response{
-			Status:  "fail",
-			Message: "Failed to get car count!",
-		})
+		SendError("Failed to get car count: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 	statistics.CarCount = int(carCount)
@@ -35,10 +29,7 @@ func GetStatistics(ctx *gin.Context) {
 	// Get total number of known cars
 	result = DB.Table("cars").Where("brand IS NOT NULL").Count(&knownCars)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, models.Response{
-			Status:  "fail",
-			Message: "Failed to get known car count!",
-		})
+		SendError("Failed to get known car count: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 	statistics.KnownCars = int(knownCars)
@@ -47,10 +38,7 @@ func GetStatistics(ctx *gin.Context) {
 	// Get total number of unknown cars
 	result = DB.Table("cars").Where("brand IS NULL").Count(&unknownCars)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, models.Response{
-			Status:  "fail",
-			Message: "Failed to get unknown car count!",
-		})
+		SendError("Failed to get unknown car count: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 	statistics.UnknownCars = int(unknownCars)
@@ -59,10 +47,7 @@ func GetStatistics(ctx *gin.Context) {
 	// Get brand statistics
 	rows, err := DB.Table("cars").Select("brand, COUNT(*) as count").Group("brand").Where("brand is not NULL").Rows()
 	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, models.Response{
-			Status:  "fail",
-			Message: "Failed to get brand statistics!",
-		})
+		SendError("Failed to get brand statistics: "+err.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 	for rows.Next() {
@@ -77,10 +62,7 @@ func GetStatistics(ctx *gin.Context) {
 		// Get model statistics
 		rows, err := DB.Table("cars").Select("model, COUNT(*) as count").Where("brand = ?", brandStat.Brand).Group("model").Rows()
 		if err != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, models.Response{
-				Status:  "fail",
-				Message: "Failed to get model statistics!",
-			})
+			SendError("Failed to get model statistics: "+err.Error(), http.StatusInternalServerError, ctx)
 			return
 		}
 
