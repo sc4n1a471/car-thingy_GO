@@ -43,6 +43,11 @@ resource "docker_container" "car-thingy_go" {
     external = var.env == "prod" ? 3010 : (var.env == "dev" ? 3011 : null)
   }
 
+  log_driver = "gelf"
+  log_opts = {
+    "gelf-address" = "udp://${var.graylog_host}"
+  }
+
   networks_advanced {
     name = "car-thingy"
     ipv4_address = var.env == "prod" ? "172.18.0.5" : (var.env == "dev" ? "172.18.0.4" : null)

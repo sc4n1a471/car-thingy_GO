@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"Go_Thingy_GO/models"
-	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -16,17 +16,15 @@ func GetCar(ctx *gin.Context) {
 
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for getting car data", http.StatusUnauthorized, ctx)
 		return
 	}
 
 	car.ID = ctx.Param("license-plate")
+	slog.Info("Getting car with license plate: " + car.ID)
 	result := DB.Preload("Accidents").Preload("Mileage").Preload("Restrictions").First(&car)
 	if result.Error != nil {
-		SendError(result.Error.Error(), ctx)
+		SendError("Error getting car: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 	var inspections = GetInspections(ctx, car.ID)
@@ -44,6 +42,7 @@ func GetCars(ctx *gin.Context) {
 			Status:  "fail",
 			Message: "Access denied!",
 		})
+		SendError("Access denied for getting cars data", http.StatusUnauthorized, ctx)
 		return
 	}
 
@@ -51,7 +50,7 @@ func GetCars(ctx *gin.Context) {
 
 	result := DB.Find(&returnCars)
 	if result.Error != nil {
-		SendError(result.Error.Error(), ctx)
+		SendError("Error getting cars: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 
@@ -119,10 +118,7 @@ func GetCars(ctx *gin.Context) {
 func CreateCar(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for creating car", http.StatusUnauthorized, ctx)
 		return
 	}
 
@@ -133,7 +129,7 @@ func CreateCar(ctx *gin.Context) {
 	var newInspections []models.Inspection
 
 	if err := ctx.BindJSON(&newCar); err != nil {
-		SendError(err.Error(), ctx)
+		SendError("Error paring JSON: "+err.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 
@@ -152,17 +148,13 @@ func CreateCar(ctx *gin.Context) {
 		newInspections = *newCar.Inspections
 	}
 
-	fmts := "Creating car: %+v\n"
-	fmt.Printf(fmts, newCar)
-	fmts = "With accidents: %+v\n"
-	fmt.Printf(fmts, newAccidents)
-	fmts = "With restrictions: %+v\n"
-	fmt.Printf(fmts, newRestrictions)
-	fmts = "With mileages: %+v\n"
-	fmt.Printf(fmts, newMileages)
-	fmt.Printf("With inspections: %d items\n", len(newInspections))
+	slog.Info("Creating car: " + newCar.ID)
+	slog.Info("With accidents: %+v\n", newAccidents)
+	slog.Info("With restrictions: %+v\n", newRestrictions)
+	slog.Info("With mileages: %+v\n", newMileages)
+	slog.Info("With inspections: %+v\n", newInspections)
 	for _, insp := range newInspections {
-		fmt.Printf(" - Inspection at %s\n", insp.Name)
+		slog.Info("   - Inspection at " + insp.Name)
 	}
 
 	tx := DB.Begin()
@@ -173,7 +165,7 @@ func CreateCar(ctx *gin.Context) {
 		result := tx.Create(&newCar)
 		if result.Error != nil {
 			tx.Rollback()
-			SendError(result.Error.Error(), ctx)
+			SendError("Error creating new car: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 			return
 		}
 	} else {
@@ -199,7 +191,7 @@ func CreateCar(ctx *gin.Context) {
 			Save(&newCar)
 		if result.Error != nil {
 			tx.Rollback()
-			SendError(Error.Error(), ctx)
+			SendError("Error updating existing car: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 			return
 		}
 	}
@@ -218,7 +210,7 @@ func CreateCar(ctx *gin.Context) {
 		result := tx.Create(&newAccident)
 		if result.Error != nil {
 			tx.Rollback()
-			SendError(result.Error.Error(), ctx)
+			SendError("Error creating new accident: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 			return
 		}
 	}
@@ -227,7 +219,8 @@ func CreateCar(ctx *gin.Context) {
 	var existingRestrictions []models.Restriction
 	result = DB.Find(&existingRestrictions, "car_id = ?", newCar.ID)
 	if result.Error != nil {
-		SendError(result.Error.Error(), ctx)
+		tx.Rollback()
+		SendError("Error getting existing restrictions: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 
@@ -273,7 +266,7 @@ newsLoop:
 		result := tx.Create(&newMileage)
 		if result.Error != nil {
 			tx.Rollback()
-			SendError(result.Error.Error(), ctx)
+			SendError("Error creating new mileage: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 			return
 		}
 	}
@@ -291,17 +284,14 @@ newsLoop:
 func UpdateCar(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for updating car", http.StatusUnauthorized, ctx)
 		return
 	}
 
 	var updatedCar models.Car
 
 	if err := ctx.BindJSON(&updatedCar); err != nil {
-		SendError(err.Error(), ctx)
+		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 
@@ -318,7 +308,7 @@ func UpdateCar(ctx *gin.Context) {
 	result := tx.Save(&updatedCar)
 	if result.Error != nil {
 		tx.Rollback()
-		SendError(Error.Error(), ctx)
+		SendError("Error creating car: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 
@@ -332,10 +322,7 @@ func UpdateCar(ctx *gin.Context) {
 func DeleteCar(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for deleting car", http.StatusUnauthorized, ctx)
 		return
 	}
 
@@ -346,14 +333,14 @@ func DeleteCar(ctx *gin.Context) {
 	success := DeleteQueryInspections(ctx, deletableLicensePlate.ID, true)
 
 	if !success {
-		SendData("Inspections were not deleted successfully", ctx)
+		SendError("Error deleting car inspections", http.StatusInternalServerError, ctx)
 		return
 	}
 
 	result := DB.Delete(&deletableLicensePlate)
 
 	if result.RowsAffected == 0 {
-		SendError(result.Error.Error(), ctx)
+		SendError("Error deleting car: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 
@@ -364,17 +351,14 @@ func DeleteCar(ctx *gin.Context) {
 func CreateLicensePlate(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for creating license plate", http.StatusUnauthorized, ctx)
 		return
 	}
 
 	var newCar models.Car
 
 	if err := ctx.BindJSON(&newCar); err != nil {
-		SendError(err.Error(), ctx)
+		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 
@@ -386,7 +370,7 @@ func CreateLicensePlate(ctx *gin.Context) {
 		result := tx.Create(&newCar)
 		if result.Error != nil {
 			tx.Rollback()
-			SendError(result.Error.Error(), ctx)
+			SendError("Error creating license plate: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 			return
 		}
 	}
@@ -401,17 +385,14 @@ func CreateLicensePlate(ctx *gin.Context) {
 func UpdateLicensePlate(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for updating license plate", http.StatusUnauthorized, ctx)
 		return
 	}
 
 	var updatedCar models.Car
 
 	if err := ctx.BindJSON(&updatedCar); err != nil {
-		SendError(err.Error(), ctx)
+		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 
@@ -429,7 +410,7 @@ func UpdateLicensePlate(ctx *gin.Context) {
 		Update("id", updatedCar.ID)
 	if result.Error != nil {
 		tx.Rollback()
-		SendError(result.Error.Error(), ctx)
+		SendError("Could not update license plate: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 
@@ -440,7 +421,7 @@ func UpdateLicensePlate(ctx *gin.Context) {
 		Update("car_id", updatedCar.ID)
 	if result.Error != nil {
 		tx.Rollback()
-		SendError(result.Error.Error(), ctx)
+		SendError("Could not update inspections: "+result.Error.Error(), http.StatusInternalServerError, ctx)
 		return
 	}
 

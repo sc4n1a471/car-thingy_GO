@@ -3,7 +3,7 @@ package controllers
 import (
 	"Go_Thingy_GO/models"
 	"crypto/rand"
-	"fmt"
+	"log/slog"
 	"math/big"
 	"net/http"
 	"os"
@@ -14,10 +14,7 @@ import (
 func CheckAuthKey(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for checking API key", http.StatusUnauthorized, ctx)
 		return
 	}
 	ctx.IndentedJSON(http.StatusOK, models.Response{
@@ -46,29 +43,20 @@ func GetAuthenticatedClient(r *http.Request) (bool, error) {
 // MARK: CreateAuthKeyWrapper
 func CreateAuthKeyWrapper(ctx *gin.Context) {
 	if ctx.Request.Header.Get("x-api-key") != os.Getenv("API_SECRET") {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for creating new API key", http.StatusUnauthorized, ctx)
 		return
 	}
 
 	var validAuthKey models.AuthKey
 	result := DB.Select(&validAuthKey).Where("is_valid = ?", true)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, models.Response{
-			Status:  "fail",
-			Message: "Can't create multiple active API keys",
-		})
+		SendError("Can't create multiple active API keys", http.StatusBadRequest, ctx)
 		return
 	}
 
 	generatedKey, error := createAuthKey()
 	if error != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, models.Response{
-			Status:  "fail",
-			Message: error.Error(),
-		})
+		SendError("Error creating auth key: "+error.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 
@@ -81,7 +69,7 @@ func CreateAuthKeyWrapper(ctx *gin.Context) {
 func createAuthKey() (string, error) {
 	generatedKey, error := generateRandomString(64)
 	if error != nil {
-		fmt.Println(error.Error())
+		slog.Error("Error generating random string: " + error.Error())
 		return "", error
 	}
 
@@ -117,10 +105,7 @@ func generateRandomString(n int) (string, error) {
 func DeleteAuthKey(ctx *gin.Context) {
 	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
 	if error != nil || !isAccessGranted {
-		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
-			Status:  "fail",
-			Message: "Access denied!",
-		})
+		SendError("Access denied for deleting API key", http.StatusUnauthorized, ctx)
 		return
 	}
 	var authKey models.AuthKey
@@ -129,10 +114,7 @@ func DeleteAuthKey(ctx *gin.Context) {
 	tx := DB.Begin()
 	result := tx.Delete(&authKey)
 	if result.Error != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, models.Response{
-			Status:  "fail",
-			Message: result.Error.Error(),
-		})
+		SendError("Error deleting auth key: "+result.Error.Error(), http.StatusBadRequest, ctx)
 		return
 	}
 

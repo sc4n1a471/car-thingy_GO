@@ -17,6 +17,9 @@ pipeline {
         CAR_THINGY_GO_DB_NAME_PROD = credentials('CAR-THINGY_GO_DB_NAME_PROD')
 
         CAR_THINGY_GO_API_SECRET = credentials('CAR-THINGY_GO_API_SECRET')
+
+        CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV = credentials('CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV')
+        CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD = credentials('CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD')
     }
     stages {
         stage('Checkout') {
@@ -56,6 +59,7 @@ pipeline {
             }
         }
 
+        // MARK: Build and Push Docker Image
         stage('Build and Push') {
             parallel {
                 stage('Push production docker image') {
@@ -95,6 +99,7 @@ pipeline {
             }
         }
 
+        // MARK: Deploy to Development
         stage('Deploy development') {
             when {
                 not {
@@ -134,11 +139,13 @@ pipeline {
                         -var="db_port=\$CAR_THINGY_GO_DB_PORT" \
                         -var="db_name=\$CAR_THINGY_GO_DB_NAME_DEV" \
                         -var="api_secret=\$CAR_THINGY_GO_API_SECRET" \
+                        -var="graylog_host=\$CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV" \
                         -auto-approve
                     """
                 }
             }
         }
+        // MARK: Deploy to Production
         stage('Deploy production') {
             when {
                 branch 'main'
@@ -171,6 +178,7 @@ pipeline {
                         -var="db_port=\$CAR_THINGY_GO_DB_PORT" \
                         -var="db_name=\$CAR_THINGY_GO_DB_NAME_PROD" \
                         -var="api_secret=\$CAR_THINGY_GO_API_SECRET" \
+                        -var="graylog_host=\$CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD" \
                         -auto-approve
                     """
                 }

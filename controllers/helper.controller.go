@@ -3,8 +3,7 @@ package controllers
 import (
 	"Go_Thingy_GO/models"
 	"encoding/base64"
-	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -17,6 +16,7 @@ var DB *gorm.DB
 var Error error
 
 func SetupDatabase() error {
+	slog.Info("Connecting to DB...")
 	dsn := os.Getenv("DB_USERNAME") +
 		":" +
 		os.Getenv("DB_PASSWORD") +
@@ -31,6 +31,7 @@ func SetupDatabase() error {
 	DB, Error = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if Error != nil {
+		slog.Error("Error connecting to DB: " + Error.Error())
 		return Error
 	}
 
@@ -44,7 +45,7 @@ func SetupDatabase() error {
 		&models.AuthKey{},
 	)
 	if err != nil {
-		fmt.Print(err.Error())
+		slog.Error("Error during AutoMigrate: " + err.Error())
 		return err
 	}
 
@@ -60,14 +61,14 @@ func ConvertImagesToBase64(imageLocation string) []string {
 	inspectionLocation := imageLocation
 	files, err := os.ReadDir(inspectionLocation)
 	if err != nil {
-		log.Println(err)
+		slog.Error(err.Error())
 		return nil
 	}
 
 	for _, file := range files {
 		bytes, err := os.ReadFile(inspectionLocation + file.Name())
 		if err != nil {
-			log.Println(err)
+			slog.Error(err.Error())
 			return nil
 		}
 
@@ -96,9 +97,9 @@ func ConvertImagesToBase64(imageLocation string) []string {
 	return convertedImages
 }
 
-func SendError(error string, ctx *gin.Context) {
-	fmt.Println("Error: ", error)
-	ctx.IndentedJSON(http.StatusConflict, models.Response{
+func SendError(error string, statusCode int, ctx *gin.Context) {
+	slog.Error(error)
+	ctx.IndentedJSON(statusCode, models.Response{
 		Status:  "fail",
 		Message: error,
 	})

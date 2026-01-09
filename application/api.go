@@ -2,7 +2,7 @@ package application
 
 import (
 	"Go_Thingy_GO/controllers"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,7 @@ import (
 func Api() {
 	err := controllers.SetupDatabase()
 	if err != nil {
-		fmt.Print(err.Error())
+		slog.Error(err.Error())
 		return
 	}
 
