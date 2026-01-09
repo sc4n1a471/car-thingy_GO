@@ -17,6 +17,9 @@ pipeline {
         CAR_THINGY_GO_DB_NAME_PROD = credentials('CAR-THINGY_GO_DB_NAME_PROD')
 
         CAR_THINGY_GO_API_SECRET = credentials('CAR-THINGY_GO_API_SECRET')
+
+        CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV = credentials('CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV')
+        CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD = credentials('CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD')
     }
     stages {
         stage('Checkout') {
