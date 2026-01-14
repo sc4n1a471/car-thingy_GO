@@ -14,7 +14,7 @@ func GetCar(ctx *gin.Context) {
 	var car models.Car
 	var returnData []models.Car
 
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for getting car data", http.StatusUnauthorized, ctx)
 		return
@@ -36,7 +36,7 @@ func GetCar(ctx *gin.Context) {
 
 // MARK: GetCars
 func GetCars(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		ctx.IndentedJSON(http.StatusUnauthorized, models.Response{
 			Status:  "fail",
@@ -69,7 +69,7 @@ func GetCars(ctx *gin.Context) {
 	SendData(returnCars, ctx)
 }
 
-// Returns all cars in the database with all information including inspection images
+// Returns all cars in the database with all information including inspection images, for testing purposes only
 // func GetCarsAllData(ctx *gin.Context) {
 // 	var allLicensePlates []models.LicensePlate
 // 	var returnCars []models.CarResult
@@ -116,7 +116,7 @@ func GetCars(ctx *gin.Context) {
 
 // MARK: CreateCar
 func CreateCar(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for creating car", http.StatusUnauthorized, ctx)
 		return
@@ -282,7 +282,7 @@ newsLoop:
 
 // MARK: UpdateCar
 func UpdateCar(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for updating car", http.StatusUnauthorized, ctx)
 		return
@@ -320,7 +320,7 @@ func UpdateCar(ctx *gin.Context) {
 
 // MARK: DeleteCar
 func DeleteCar(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for deleting car", http.StatusUnauthorized, ctx)
 		return
@@ -345,87 +345,4 @@ func DeleteCar(ctx *gin.Context) {
 	}
 
 	SendData("Car was deleted successfully", ctx)
-}
-
-// MARK: CreateLicensePlate
-func CreateLicensePlate(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
-	if error != nil || !isAccessGranted {
-		SendError("Access denied for creating license plate", http.StatusUnauthorized, ctx)
-		return
-	}
-
-	var newCar models.Car
-
-	if err := ctx.BindJSON(&newCar); err != nil {
-		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
-		return
-	}
-
-	newCar.ID = strings.ReplaceAll(newCar.ID, " ", "")
-
-	tx := DB.Begin()
-	result := tx.First(&newCar)
-	if result.RowsAffected == 0 {
-		result := tx.Create(&newCar)
-		if result.Error != nil {
-			tx.Rollback()
-			SendError("Error creating license plate: "+result.Error.Error(), http.StatusInternalServerError, ctx)
-			return
-		}
-	}
-
-	tx.Commit()
-
-	SendData("License plate was uploaded successfully", ctx)
-	return
-}
-
-// MARK: UpdateLicensePlate
-func UpdateLicensePlate(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
-	if error != nil || !isAccessGranted {
-		SendError("Access denied for updating license plate", http.StatusUnauthorized, ctx)
-		return
-	}
-
-	var updatedCar models.Car
-
-	if err := ctx.BindJSON(&updatedCar); err != nil {
-		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
-		return
-	}
-
-	var oldLicensePlate = ctx.Param("license-plate")
-
-	updatedCar.ID = strings.ReplaceAll(updatedCar.ID, " ", "")
-	oldLicensePlate = strings.ReplaceAll(oldLicensePlate, " ", "")
-
-	tx := DB.Begin()
-
-	// Update license plate (oldLicensePlate) with new license plate (updatedCar.LicensePlate)
-	result := tx.
-		Model(&models.Car{}).
-		Where("id = ?", oldLicensePlate).
-		Update("id", updatedCar.ID)
-	if result.Error != nil {
-		tx.Rollback()
-		SendError("Could not update license plate: "+result.Error.Error(), http.StatusInternalServerError, ctx)
-		return
-	}
-
-	// Update inspections with new license plate
-	result = tx.
-		Model(&models.Inspection{}).
-		Where("car_id = ?", oldLicensePlate).
-		Update("car_id", updatedCar.ID)
-	if result.Error != nil {
-		tx.Rollback()
-		SendError("Could not update inspections: "+result.Error.Error(), http.StatusInternalServerError, ctx)
-		return
-	}
-
-	tx.Commit()
-
-	SendData("License Plate was updated successfully", ctx)
 }

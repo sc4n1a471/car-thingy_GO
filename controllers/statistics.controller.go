@@ -8,7 +8,7 @@ import (
 )
 
 func GetStatistics(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for getting statistics", http.StatusUnauthorized, ctx)
 		return
@@ -16,8 +16,8 @@ func GetStatistics(ctx *gin.Context) {
 
 	var statistics models.Statistics
 
+	// MARK: Get total number of cars
 	var carCount int64
-	// Get total number of cars
 	result := DB.Table("cars").Count(&carCount)
 	if result.Error != nil {
 		SendError("Failed to get car count: "+result.Error.Error(), http.StatusInternalServerError, ctx)
@@ -25,8 +25,8 @@ func GetStatistics(ctx *gin.Context) {
 	}
 	statistics.CarCount = int(carCount)
 
+	// MARK: Get known and unknown cars
 	var knownCars int64
-	// Get total number of known cars
 	result = DB.Table("cars").Where("brand IS NOT NULL").Count(&knownCars)
 	if result.Error != nil {
 		SendError("Failed to get known car count: "+result.Error.Error(), http.StatusInternalServerError, ctx)
@@ -35,7 +35,6 @@ func GetStatistics(ctx *gin.Context) {
 	statistics.KnownCars = int(knownCars)
 
 	var unknownCars int64
-	// Get total number of unknown cars
 	result = DB.Table("cars").Where("brand IS NULL").Count(&unknownCars)
 	if result.Error != nil {
 		SendError("Failed to get unknown car count: "+result.Error.Error(), http.StatusInternalServerError, ctx)
@@ -43,8 +42,8 @@ func GetStatistics(ctx *gin.Context) {
 	}
 	statistics.UnknownCars = int(unknownCars)
 
+	// MARK: Get brand and model statistics
 	var brandStats []models.BrandStatistics
-	// Get brand statistics
 	rows, err := DB.Table("cars").Select("brand, COUNT(*) as count").Group("brand").Where("brand is not NULL").Rows()
 	if err != nil {
 		SendError("Failed to get brand statistics: "+err.Error(), http.StatusInternalServerError, ctx)

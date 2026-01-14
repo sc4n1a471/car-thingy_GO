@@ -15,6 +15,7 @@ import (
 var DB *gorm.DB
 var Error error
 
+// MARK: Setup DB
 func SetupDatabase() error {
 	slog.Info("Connecting to DB...")
 	dsn := os.Getenv("DB_USERNAME") +
@@ -97,6 +98,7 @@ func ConvertImagesToBase64(imageLocation string) []string {
 	return convertedImages
 }
 
+// MARK: Send methods
 func SendError(error string, statusCode int, ctx *gin.Context) {
 	slog.Error(error)
 	ctx.IndentedJSON(statusCode, models.Response{

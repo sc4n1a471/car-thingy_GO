@@ -11,8 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CheckAuthKey(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+// MARK: CheckAuthKeyWrapper
+func CheckAuthKeyWrapper(ctx *gin.Context) {
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for checking API key", http.StatusUnauthorized, ctx)
 		return
@@ -23,11 +24,14 @@ func CheckAuthKey(ctx *gin.Context) {
 	})
 }
 
-// MARK: GetAuthenticatedClient
-func GetAuthenticatedClient(r *http.Request) (bool, error) {
+// MARK: CheckAuthKey
+// Returns true if the auth key is valid and active
+func CheckAuthKey(r *http.Request) (bool, error) {
 	var authKey models.AuthKey
 	authKey.ID = r.Header.Get("x-api-key")
 	authKey.IsActive = true
+
+	slog.Info("Check API key from host: " + r.RemoteAddr)
 
 	if authKey.ID == "" {
 		return false, nil
@@ -103,7 +107,7 @@ func generateRandomString(n int) (string, error) {
 
 // MARK: DeleteAuthKey
 func DeleteAuthKey(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for deleting API key", http.StatusUnauthorized, ctx)
 		return
