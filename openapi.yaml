@@ -147,6 +147,7 @@ paths:
   /cars:
     get:
       summary: Get a list of cars
+      description: Disabled in code, for testing purposes only
       operationId: getCars
       parameters:
         - in: header
@@ -345,7 +346,7 @@ paths:
   
   /query-inspections/{licensePlate}:
     get:
-      summary: Get a list of inspections associated to the car (used at a websocket query)
+      summary: Get a list of inspections associated to a non-saved car
       parameters:
         - name: licensePlate
           in: path
@@ -380,47 +381,10 @@ paths:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
       tags:
         - query-inspections
-    delete:
-      summary: Delete all of the inspections associated to the car (used at a websocket query)
-      parameters:
-        - name: licensePlate
-          in: path
-          description: Delete query inspections for this license plate
-          required: true
-          schema:
-            type: string
-        - in: query
-          name: isQuerySaved
-          required: true
-          description: If the query is saved, the images are not deleted.
-            If not, the images are deleted. 
-            Both cases the records are deleted from query_inspection table.
-          schema:
-            type: string
-        - in: header
-          name: x-api-key
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'
-      tags:
-        - query-inspections
 
   /inspections:
     post:
-      summary: Create a new query inspection (used by websocket server)
+      summary: Create a new query inspection (used by Socket.IO server only)
       parameters:
         - in: header
           name: x-api-key
@@ -448,6 +412,7 @@ paths:
                 $ref: './models/openapi/message.yaml#/components/schemas/MessageResponse'     
       tags:
         - inspections       
+  
   /statistics:
     get:
       summary: Get statistics

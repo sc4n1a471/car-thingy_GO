@@ -2,7 +2,7 @@
 
 Ez lenni repository for car-thingy_GO
 
-This backend appliation is part of the car-thingy system. This app is written in GO, acts as the REST API for CRUD operations for every model.
+This backend appliation is part of the car-thingy system. This app is written in GO, acts as the REST API for CRUD operations.
 
 ## Setup
 - Have an operational MySQL database
@@ -22,6 +22,7 @@ terraform apply \
     -var="db_port=<db port>" \
     -var="db_name=<db name>" \
     -var="api_secret=<random secret>" \
+    -var="graylog_host=<graylog host>"
     -auto-approve
 ```
 
@@ -34,7 +35,7 @@ docker run --mount source=downloaded_images,target=/app/downloaded_images \
     -e "DB_PASSWORD=<db passwd>" \
     -e "DB_PORT=<db port>" \
     -e "DB_NAME=<db name>" \
-    -e "API_SECRET=<random secret>"
+    -e "API_SECRET=<random secret>" \
     -p <exposed port>:3000 \
     --restart unless-stopped \
     --name=car-thingy_GO \
