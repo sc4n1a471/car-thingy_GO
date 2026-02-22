@@ -22,6 +22,14 @@ func scheduleDeleteOldQueryInspections() {
 
 func main() {
 	slog.Info("Starting API...")
+	loc, err := time.LoadLocation("Europe/Budapest")
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+	time.Local = loc
+	now := time.Now().Round(0)
+	slog.Info("Current time: " + now.GoString() + ", timezone: " + time.Local.String())
 	go scheduleDeleteOldQueryInspections()
 	application.Api()
 }
