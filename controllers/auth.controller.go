@@ -3,16 +3,19 @@ package controllers
 import (
 	"Go_Thingy_GO/models"
 	"crypto/rand"
+	"fmt"
 	"log/slog"
 	"math/big"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-func CheckAuthKey(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+// MARK: CheckAuthKeyWrapper
+func CheckAuthKeyWrapper(ctx *gin.Context) {
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for checking API key", http.StatusUnauthorized, ctx)
 		return
@@ -23,11 +26,14 @@ func CheckAuthKey(ctx *gin.Context) {
 	})
 }
 
-// MARK: GetAuthenticatedClient
-func GetAuthenticatedClient(r *http.Request) (bool, error) {
+// MARK: CheckAuthKey
+// Returns true if the auth key is valid and active
+func CheckAuthKey(r *http.Request) (bool, error) {
 	var authKey models.AuthKey
 	authKey.ID = r.Header.Get("x-api-key")
 	authKey.IsActive = true
+
+	slog.Info("Check API key from host: " + r.RemoteAddr)
 
 	if authKey.ID == "" {
 		return false, nil
@@ -103,7 +109,7 @@ func generateRandomString(n int) (string, error) {
 
 // MARK: DeleteAuthKey
 func DeleteAuthKey(ctx *gin.Context) {
-	isAccessGranted, error := GetAuthenticatedClient(ctx.Request)
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
 	if error != nil || !isAccessGranted {
 		SendError("Access denied for deleting API key", http.StatusUnauthorized, ctx)
 		return
@@ -123,4 +129,66 @@ func DeleteAuthKey(ctx *gin.Context) {
 		Status:  "success",
 		Message: "AutKey deleted successfully!",
 	})
+}
+
+// MARK: Log query timestamp
+func LogQueryTimestamp(ctx *gin.Context) {
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
+	if error != nil || !isAccessGranted {
+		SendError("Access denied for logging query timestamp", http.StatusUnauthorized, ctx)
+		return
+	}
+
+	var queryLog models.QueryLog
+
+	if err := ctx.BindJSON(&queryLog); err != nil {
+		SendError("Could not parse JSON: "+err.Error(), http.StatusBadRequest, ctx)
+		return
+	}
+
+	queryLog.User = ctx.Request.Header.Get("x-api-key")
+	queryLog.QueryTimestamp = time.Now().Format(time.UnixDate)
+
+	tx := DB.Begin()
+	result := tx.Create(&queryLog)
+	if result.Error != nil {
+		SendError("Error logging query timestamp: "+result.Error.Error(), http.StatusBadRequest, ctx)
+		return
+	}
+
+	tx.Commit()
+	SendData("Query timestamp logged successfully", ctx)
+}
+
+// MARK: Get last query timestamp
+func GetLastLogQueryTimestamp(ctx *gin.Context) {
+	isAccessGranted, error := CheckAuthKey(ctx.Request)
+	if error != nil || !isAccessGranted {
+		SendError("Access denied for getting last query timestamp", http.StatusUnauthorized, ctx)
+		return
+	}
+
+	var queryLog models.QueryLog
+	result := DB.Where("user = ?", ctx.Request.Header.Get("x-api-key")).Order("query_timestamp desc").First(&queryLog)
+	if result.RowsAffected == 0 {
+		SendData(0, ctx)
+		return
+	}
+	if result.Error != nil {
+		SendError("Error getting last query timestamp: "+result.Error.Error(), http.StatusBadRequest, ctx)
+		return
+	}
+
+	// Calculate how many seconds ago the queryTimeStamp was and return that in the response
+	var parsedQueryTimestamp, _ = time.Parse(time.UnixDate, queryLog.QueryTimestamp)
+	var secondsAgo = int(time.Since(parsedQueryTimestamp).Seconds())
+	var waitingTime = 0
+	if secondsAgo >= 30 {
+		waitingTime = 0
+	} else {
+		waitingTime = 30 - secondsAgo
+		waitingTime = int(waitingTime) + 1
+	}
+	slog.Info("Previous query timestamp: " + parsedQueryTimestamp.String() + ", how many seconds ago: " + fmt.Sprint(secondsAgo) + ", waiting time: " + fmt.Sprint(waitingTime))
+	SendData(waitingTime, ctx)
 }
