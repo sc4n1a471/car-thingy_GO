@@ -21,8 +21,7 @@ terraform apply \
     -var="db_ip=<db ip>" \
     -var="db_port=<db port>" \
     -var="db_name=<db name>" \
-    -var="api_secret=<random secret>" \
-    -var="graylog_host=<graylog host>"
+    -var="api_secret=<random secret>"
     -auto-approve
 ```
 

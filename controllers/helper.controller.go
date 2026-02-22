@@ -44,6 +44,7 @@ func SetupDatabase() error {
 		&models.Mileage{},
 		&models.Restriction{},
 		&models.AuthKey{},
+		&models.QueryLog{},
 	)
 	if err != nil {
 		slog.Error("Error during AutoMigrate: " + err.Error())
