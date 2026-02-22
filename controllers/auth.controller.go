@@ -182,7 +182,7 @@ func GetLastLogQueryTimestamp(ctx *gin.Context) {
 	// Calculate how many seconds ago the queryTimeStamp was and return that in the response
 	var parsedQueryTimestamp, _ = time.Parse(time.UnixDate, queryLog.QueryTimestamp)
 	slog.Info("Parsed query timestamp: " + parsedQueryTimestamp.String())
-	var secondsAgo = time.Since(parsedQueryTimestamp).Seconds()
+	var secondsAgo = int(time.Since(parsedQueryTimestamp).Seconds()) + 1 // +1 to round up, miliseconds were a problem
 	slog.Info("Seconds ago: " + fmt.Sprint(secondsAgo))
 	if secondsAgo >= 30 {
 		secondsAgo = 0
