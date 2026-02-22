@@ -3,6 +3,7 @@ package controllers
 import (
 	"Go_Thingy_GO/models"
 	"crypto/rand"
+	"fmt"
 	"log/slog"
 	"math/big"
 	"net/http"
@@ -180,7 +181,9 @@ func GetLastLogQueryTimestamp(ctx *gin.Context) {
 
 	// Calculate how many seconds ago the queryTimeStamp was and return that in the response
 	var parsedQueryTimestamp, _ = time.Parse(time.UnixDate, queryLog.QueryTimestamp)
+	slog.Info("Parsed query timestamp: " + parsedQueryTimestamp.String())
 	var secondsAgo = time.Since(parsedQueryTimestamp).Seconds()
+	slog.Info("Seconds ago: " + fmt.Sprint(secondsAgo))
 	if secondsAgo >= 30 {
 		secondsAgo = 0
 	} else {
