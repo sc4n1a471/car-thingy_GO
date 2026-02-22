@@ -17,9 +17,6 @@ pipeline {
         CAR_THINGY_GO_DB_NAME_PROD = credentials('CAR-THINGY_GO_DB_NAME_PROD')
 
         CAR_THINGY_GO_API_SECRET = credentials('CAR-THINGY_GO_API_SECRET')
-
-        CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV = credentials('CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV')
-        CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD = credentials('CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD')
     }
     stages {
         stage('Checkout') {
@@ -139,7 +136,6 @@ pipeline {
                         -var="db_port=\$CAR_THINGY_GO_DB_PORT" \
                         -var="db_name=\$CAR_THINGY_GO_DB_NAME_DEV" \
                         -var="api_secret=\$CAR_THINGY_GO_API_SECRET" \
-                        -var="graylog_host=\$CAR_THINGY_PYTHON_GRAYLOG_HOST_DEV" \
                         -auto-approve
                     """
                 }
@@ -178,7 +174,6 @@ pipeline {
                         -var="db_port=\$CAR_THINGY_GO_DB_PORT" \
                         -var="db_name=\$CAR_THINGY_GO_DB_NAME_PROD" \
                         -var="api_secret=\$CAR_THINGY_GO_API_SECRET" \
-                        -var="graylog_host=\$CAR_THINGY_PYTHON_GRAYLOG_HOST_PROD" \
                         -auto-approve
                     """
                 }

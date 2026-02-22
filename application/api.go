@@ -38,6 +38,9 @@ func Api() {
 	router.POST("/auth", controllers.CreateAuthKeyWrapper)
 	router.DELETE("/auth", controllers.DeleteAuthKey)
 
+	router.GET("/query-timestamp", controllers.GetLastLogQueryTimestamp)
+	router.POST("/query-timestamp", controllers.LogQueryTimestamp)
+
 	// MARK: Statistics endpoints
 	router.GET("/statistics", controllers.GetStatistics)
 
