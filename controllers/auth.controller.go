@@ -187,8 +187,8 @@ func GetLastLogQueryTimestamp(ctx *gin.Context) {
 		waitingTime = 0
 	} else {
 		waitingTime = 30 - secondsAgo
+		waitingTime = int(waitingTime) + 1
 	}
-	waitingTime = int(secondsAgo) + 1
 	slog.Info("Previous query timestamp: " + parsedQueryTimestamp.String() + ", how many seconds ago: " + fmt.Sprint(secondsAgo) + ", waiting time: " + fmt.Sprint(waitingTime))
 	SendData(waitingTime, ctx)
 }
