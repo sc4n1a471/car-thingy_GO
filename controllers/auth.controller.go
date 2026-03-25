@@ -147,7 +147,7 @@ func LogQueryTimestamp(ctx *gin.Context) {
 	}
 
 	queryLog.User = ctx.Request.Header.Get("x-api-key")
-	queryLog.QueryTimestamp = time.Now().Format(time.UnixDate)
+	queryLog.QueryTimestamp = time.Now()
 
 	tx := DB.Begin()
 	result := tx.Create(&queryLog)
@@ -180,8 +180,7 @@ func GetLastLogQueryTimestamp(ctx *gin.Context) {
 	}
 
 	// Calculate how many seconds ago the queryTimeStamp was and return that in the response
-	var parsedQueryTimestamp, _ = time.Parse(time.UnixDate, queryLog.QueryTimestamp)
-	var secondsAgo = int(time.Since(parsedQueryTimestamp).Seconds())
+	var secondsAgo = int(time.Since(queryLog.QueryTimestamp).Seconds())
 	var waitingTime = 0
 	if secondsAgo >= 30 {
 		waitingTime = 0
@@ -189,6 +188,6 @@ func GetLastLogQueryTimestamp(ctx *gin.Context) {
 		waitingTime = 30 - secondsAgo
 		waitingTime = int(waitingTime) + 1
 	}
-	slog.Info("Previous query timestamp: " + parsedQueryTimestamp.String() + ", how many seconds ago: " + fmt.Sprint(secondsAgo) + ", waiting time: " + fmt.Sprint(waitingTime))
+	slog.Info("Previous query timestamp: " + queryLog.QueryTimestamp.String() + ", how many seconds ago: " + fmt.Sprint(secondsAgo) + ", waiting time: " + fmt.Sprint(waitingTime))
 	SendData(waitingTime, ctx)
 }
